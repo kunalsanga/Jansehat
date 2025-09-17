@@ -6,52 +6,10 @@ import PhotoCarousel from "./components/PhotoCarousel"
 import HealthRecords from './components/HealthRecords'
 import VideoConsultation from './components/VideoConsultation'
 import MedicineAvailability from './components/MedicineAvailability'
+import MobileTabBar from './components/MobileTabBar'
+import SideNav from './components/SideNav'
+import ServiceCard from './components/ServiceCard'
 
-function MobileTabBar() {
-  return (
-    <nav className="fixed bottom-0 inset-x-0 z-20 bg-white border-t border-zinc-200 sm:hidden">
-      <div className="grid grid-cols-5 text-xs">
-        <NavLink to="/" end className={({ isActive }) => `px-2 py-3 text-center ${isActive ? 'text-blue-600' : 'text-zinc-500'}`}>Home</NavLink>
-        <NavLink to="/symptoms" className={({ isActive }) => `px-2 py-3 text-center ${isActive ? 'text-blue-600' : 'text-zinc-500'}`}>Symptoms</NavLink>
-        <NavLink to="/video" className={({ isActive }) => `px-2 py-3 text-center ${isActive ? 'text-blue-600' : 'text-zinc-500'}`}>Video</NavLink>
-        <NavLink to="/records" className={({ isActive }) => `px-2 py-3 text-center ${isActive ? 'text-blue-600' : 'text-zinc-500'}`}>Records</NavLink>
-        <NavLink to="/medicine" className={({ isActive }) => `px-2 py-3 text-center ${isActive ? 'text-blue-600' : 'text-zinc-500'}`}>Medicine</NavLink>
-      </div>
-    </nav>
-  )
-}
-
-function SideNav() {
-  const Item = ({ to, label, icon }) => (
-    <NavLink
-      to={to}
-      end={to === '/'}
-      className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition ${isActive ? 'bg-blue-50 text-blue-700' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'}`}
-    >
-      <span className="text-lg">{icon}</span>
-      <span>{label}</span>
-    </NavLink>
-  )
-
-  return (
-    <aside className="hidden sm:flex sm:flex-col sm:w-64 shrink-0 border-r border-zinc-200 bg-white">
-      <div className="px-4 py-5 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center text-white text-lg">🩺</div>
-      <div>
-          <div className="font-semibold">JanSehat</div>
-          <div className="text-xs text-zinc-500">Your Health, Our Priority</div>
-        </div>
-      </div>
-      <nav className="flex flex-col px-2 pb-4 gap-1">
-        <Item to="/" label="Home" icon="🏠" />
-        <Item to="/symptoms" label="Symptom Checker" icon="🩻" />
-        <Item to="/video" label="Video Consultation" icon="🎥" />
-        <Item to="/records" label="Health Records" icon="📄" />
-        <Item to="/medicine" label="Medicine Availability" icon="💊" />
-      </nav>
-    </aside>
-  )
-}
 
 function Section({ title, children }) {
   return (
@@ -59,37 +17,6 @@ function Section({ title, children }) {
       <h2 className="text-base font-semibold mb-2">{title}</h2>
       <div>{children}</div>
     </section>
-  )
-}
-
-function ServiceCard({ imgSrc, icon, title, description, to }) {
-  return (
-    <NavLink
-      to={to}
-      className="group block rounded-2xl relative overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition"
-    >
-      {/* Background image */}
-      <img
-        src={imgSrc}
-        alt={title}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-
-      {/* Overlay for text readability */}
-      <div className="absolute inset-0 bg-black/30"></div>
-
-      {/* Content */}
-      <div className="relative p-5 flex items-start gap-4 text-white">
-        <div className="w-12 h-12 rounded-xl grid place-items-center text-2xl bg-white/30">{icon}</div>
-        <div className="flex-1">
-          <div className="text-xl font-semibold mb-1">{title}</div>
-          <div className="text-sm leading-snug">{description}</div>
-        </div>
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 group-hover:text-white group-hover:translate-x-0.5 transition">
-          ›
-        </div>
-      </div>
-    </NavLink>
   )
 }
 
