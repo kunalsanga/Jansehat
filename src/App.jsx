@@ -10,6 +10,8 @@ import MobileTabBar from './components/MobileTabBar'
 import SideNav from './components/SideNav'
 import ServiceCard from './components/ServiceCard'
 import SymptomChecker from './components/SymptomChecker'
+import EmergencyMode from './components/EmergencyMode'
+import HospitalNavigation from './components/HospitalNavigation'
 
 
 function Section({ title, children }) {
@@ -98,6 +100,20 @@ function Home() {
             title="Medicine Finder"
             description="Check medicine availability at nearby pharmacies"
           />
+          <ServiceCard
+            to="/emergency"
+            imgSrc="/images/emergency-bg.jpg"
+            icon="🚨"
+            title="Emergency Mode"
+            description="Quick access to emergency services and urgent care"
+          />
+          <ServiceCard
+            to="/navigation"
+            imgSrc="/images/navigation-bg.jpg"
+            icon="🗺️"
+            title="Hospital Navigation"
+            description="Find and navigate to nearby hospitals and pharmacies"
+          />
         </div>
       </div>
 
@@ -131,6 +147,8 @@ function Layout() {
                 <Route path="/video" element={<VideoConsultation />} />
                 <Route path="/records" element={<HealthRecords />} />
                 <Route path="/medicine" element={<MedicineAvailability />} />
+                <Route path="/emergency" element={<EmergencyMode />} />
+                <Route path="/navigation" element={<HospitalNavigation />} />
               </Routes>
             </div>
           </main>

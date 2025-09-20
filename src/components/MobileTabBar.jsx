@@ -28,11 +28,11 @@ function MobileTabBar() {
             <span className="text-xs">Video</span>
           </NavLink>
           <NavLink 
-            to="/records" 
-            className={({ isActive }) => `px-1 py-2 sm:py-3 text-center flex flex-col items-center gap-1 transition-colors ${isActive ? 'text-blue-600' : 'text-zinc-500'}`}
+            to="/emergency" 
+            className={({ isActive }) => `px-1 py-2 sm:py-3 text-center flex flex-col items-center gap-1 transition-colors ${isActive ? 'text-red-600' : 'text-zinc-500'}`}
           >
-            <span className="text-sm">📄</span>
-            <span className="text-xs">Records</span>
+            <span className="text-sm">🚨</span>
+            <span className="text-xs">Emergency</span>
           </NavLink>
           <NavLink 
             to="/medicine" 

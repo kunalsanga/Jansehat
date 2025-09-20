@@ -28,6 +28,8 @@ function SideNav() {
         <Item to="/video" label="Video Consultation" icon="🎥" />
         <Item to="/records" label="Health Records" icon="📄" />
         <Item to="/medicine" label="Medicine Availability" icon="💊" />
+        <Item to="/emergency" label="Emergency Mode" icon="🚨" />
+        <Item to="/navigation" label="Hospital Navigation" icon="🗺️" />
       </nav>
     </aside>
   )
