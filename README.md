@@ -1,12 +1,266 @@
-# React + Vite
+# Jansehat - AI-Powered Telemedicine Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive telemedicine application built with React and Express.js, featuring AI-powered symptom checking, health records management, and video consultation capabilities.
 
-Currently, two official plugins are available:
+![Jansehat Logo](public/images/custom/Screenshot%202025-09-19%20213255.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- **🤖 AI Symptom Checker** - Powered by Google Gemini AI for preliminary health analysis
+- **📋 Health Records** - Manage and access medical history securely
+- **💊 Medicine Availability** - Check medicine availability and pricing
+- **📹 Video Consultation** - Telemedicine video calling interface
+- **📱 Mobile Responsive** - Works seamlessly on all devices
+- **🎨 Modern UI** - Clean, professional design with Tailwind CSS
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠️ Tech Stack
+
+### Frontend
+- **React 19** - Modern React with hooks
+- **Vite** - Fast build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router** - Client-side routing
+
+### Backend
+- **Express.js** - Node.js web framework
+- **Google Gemini AI** - AI-powered symptom analysis
+- **CORS** - Cross-origin resource sharing
+- **dotenv** - Environment variable management
+
+## 📋 Prerequisites
+
+Before running this project, make sure you have:
+
+- **Node.js** (v16 or higher)
+- **npm** (v8 or higher)
+- **Google Gemini API Key** (free from [Google AI Studio](https://aistudio.google.com/))
+
+## 🚀 Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/kunalsanga/Jansehat.git
+cd Jansehat
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Set Up Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Gemini AI Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+
+# Server Configuration
+PORT=3001
+VITE_API_BASE_URL=http://localhost:3001
+```
+
+**To get your Gemini API Key:**
+1. Visit [Google AI Studio](https://aistudio.google.com/)
+2. Sign in with your Google account
+3. Click "Get API Key"
+4. Create a new API key
+5. Copy the key and replace `your_gemini_api_key_here` in the `.env` file
+
+### 4. Run the Application
+
+#### Option 1: Run Both Servers (Recommended)
+```bash
+npm run dev:full
+```
+
+#### Option 2: Run Servers Separately
+
+**Terminal 1 - Backend Server:**
+```bash
+npm run server
+```
+
+**Terminal 2 - Frontend Server:**
+```bash
+npm run dev
+```
+
+### 5. Access the Application
+
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:3001
+- **Health Check:** http://localhost:3001/api/health
+
+## 📁 Project Structure
+
+```
+Jansehat/
+├── public/
+│   └── images/
+│       ├── custom/          # Carousel images
+│       ├── vcDoctor.jpg     # Video consultation image
+│       └── video-bg.jpg     # Background images
+├── src/
+│   ├── components/
+│   │   ├── SymptomChecker.jsx    # AI symptom analysis
+│   │   ├── HealthRecords.jsx     # Medical records management
+│   │   ├── MedicineAvailability.jsx # Medicine finder
+│   │   ├── VideoConsultation.jsx # Video calling interface
+│   │   ├── PhotoCarousel.jsx     # Image carousel
+│   │   ├── ServiceCard.jsx       # Service cards
+│   │   ├── TopBar.jsx           # Top navigation
+│   │   ├── SideNav.jsx          # Side navigation
+│   │   └── MobileTabBar.jsx     # Mobile navigation
+│   ├── App.jsx              # Main app component
+│   ├── App.css              # App styles
+│   ├── index.css            # Global styles
+│   └── main.jsx             # App entry point
+├── server.js                # Express.js backend
+├── config.js                # Configuration settings
+├── package.json             # Dependencies and scripts
+├── tailwind.config.js       # Tailwind configuration
+├── vite.config.js           # Vite configuration
+└── .env                     # Environment variables
+```
+
+## 🔧 Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start frontend development server |
+| `npm run server` | Start backend API server |
+| `npm run dev:full` | Start both frontend and backend |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+
+## 🌐 API Endpoints
+
+### Health Check
+```
+GET /api/health
+```
+Returns server status and timestamp.
+
+### Symptom Checker
+```
+POST /api/symptom-check
+```
+**Request Body:**
+```json
+{
+  "symptoms": "I have a headache and fever"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "analysis": "AI-generated health analysis...",
+  "timestamp": "2025-01-19T10:30:00.000Z"
+}
+```
+
+## 🎨 Customization
+
+### Changing Image Carousel Speed
+
+Edit `tailwind.config.js`:
+
+```javascript
+animation: {
+  'marquee-fast': 'marquee 8s linear infinite',    // Fast
+  'marquee-medium': 'marquee 12s linear infinite', // Medium
+  'marquee-slow': 'marquee 20s linear infinite',   // Slow
+}
+```
+
+### Adding New Images
+
+1. Add images to `public/images/custom/`
+2. Update the `photos` array in `src/components/PhotoCarousel.jsx`
+
+### Styling
+
+The project uses Tailwind CSS. Modify `src/index.css` or component files for custom styles.
+
+## 🚀 Deployment
+
+### Frontend (Vercel/Netlify)
+1. Build the project: `npm run build`
+2. Deploy the `dist` folder
+3. Set environment variables in your hosting platform
+
+### Backend (Heroku/Railway)
+1. Deploy the `server.js` file
+2. Set environment variables in your hosting platform
+3. Update `VITE_API_BASE_URL` in frontend
+
+## 🔒 Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GEMINI_API_KEY` | Google Gemini API key | Yes |
+| `VITE_GEMINI_API_KEY` | Frontend Gemini API key | Yes |
+| `PORT` | Backend server port | No (default: 3001) |
+| `VITE_API_BASE_URL` | Backend API URL | No (default: http://localhost:3001) |
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**1. "Unable to connect to AI service"**
+- Check if your Gemini API key is correctly set in `.env`
+- Verify the API key is valid at [Google AI Studio](https://aistudio.google.com/)
+
+**2. "Module not found" errors**
+- Run `npm install` to install dependencies
+- Check if all files are in the correct directories
+
+**3. Port already in use**
+- Change the `PORT` in `.env` file
+- Kill existing processes using the port
+
+**4. CORS errors**
+- Ensure backend server is running on the correct port
+- Check `VITE_API_BASE_URL` matches the backend URL
+
+### Getting Help
+
+1. Check the console for error messages
+2. Verify all environment variables are set
+3. Ensure both frontend and backend servers are running
+4. Check the network tab in browser dev tools
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📞 Support
+
+For support, email kunalsanga@example.com or create an issue in the repository.
+
+## 🙏 Acknowledgments
+
+- Google Gemini AI for providing the AI capabilities
+- React and Express.js communities
+- Tailwind CSS for the styling framework
+- All contributors and users of this project
+
+---
+
+**Made with ❤️ for better healthcare accessibility**
