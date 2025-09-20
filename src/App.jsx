@@ -4,7 +4,7 @@ import './App.css'
 import TopBar from "./components/TopBar"
 import PhotoCarousel from "./components/PhotoCarousel"
 import HealthRecords from './components/HealthRecords'
-import VideoConsultation from './components/VideoConsultation'
+import VideoConsultation from './components/videoConsultation'
 import MedicineAvailability from './components/MedicineAvailability'
 import MobileTabBar from './components/MobileTabBar'
 import SideNav from './components/SideNav'
