@@ -9,12 +9,13 @@ import MedicineAvailability from './components/MedicineAvailability'
 import MobileTabBar from './components/MobileTabBar'
 import SideNav from './components/SideNav'
 import ServiceCard from './components/ServiceCard'
+import SymptomChecker from './components/SymptomChecker'
 
 
 function Section({ title, children }) {
   return (
-    <section className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
-      <h2 className="text-base font-semibold mb-2">{title}</h2>
+    <section className="bg-white border border-zinc-200 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm">
+      <h2 className="text-sm sm:text-base font-semibold mb-2 sm:mb-3">{title}</h2>
       <div>{children}</div>
     </section>
   )
@@ -52,54 +53,52 @@ function Home() {
     }
   }, [])
   return (
-    <div className="space-y-6 pb-20 sm:pb-6">
-      {/* Hero */}
-      <section className="rounded-3xl bg-gradient-to-b from-blue-50 to-transparent p-5 sm:p-8 text-center">
-        <div className="mx-auto mb-3 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center text-white text-3xl">💙</div>
-        <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">Welcome to JanSehat</h1>
-        <p className="mt-2 text-sm sm:text-base text-zinc-600">Quality healthcare from the comfort of your home</p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 pb-20 sm:pb-6">
+      {/* Hero (full-bleed) */}
+      <section className="rounded-none sm:rounded-3xl bg-gradient-to-b from-blue-50 to-transparent p-3 xs:p-4 sm:p-6 lg:p-8 text-center -mx-2 sm:mx-0 lg:-mx-6 xl:-mx-8 3xl:-mx-12">
+        <div className="mx-auto mb-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center text-white text-2xl sm:text-3xl">💙</div>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight">Welcome to JanSehat</h1>
+        <p className="mt-2 text-sm sm:text-base lg:text-lg text-zinc-600 max-w-2xl mx-auto">Quality healthcare from the comfort of your home</p>
 
-        <div className="mt-6 w-full overflow-x-hidden px-4">
-  <PhotoCarousel />
-</div>
-
-      
+        <div className="mt-4 sm:mt-6 w-full overflow-x-hidden px-2 sm:px-4">
+          <PhotoCarousel />
+        </div>
       </section>
 
-      {/* Auto-scrolling photos */}
-      
+      {/* Services Section */}
+      <div className="space-y-4 sm:space-y-6">
+        <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-center lg:text-left">Our Services</h2>
 
-      <div className="text-2xl sm:text-4xl font-bold tracking-tight text-center sm:text-left">Our Services</div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ServiceCard
-          to="/symptoms"
-          imgSrc="/images/symptoms-bg.jpg"
-          icon="🩺"
-          title="Symptom Checker"
-          description="Get instant preliminary diagnosis based on your symptoms"
-        />
-        <ServiceCard
-          to="/video"
-          imgSrc="/images/vcDoctor.jpg"
-          icon="📹"
-          title="Video Consultation"
-          description="Connect with certified doctors through video calls"
-        />
-        <ServiceCard
-          to="/records"
-          imgSrc="/images/records-bg.jpg"
-          icon="📄"
-          title="Health Records"
-          description="Manage and access your medical history securely"
-        />
-        <ServiceCard
-          to="/medicine"
-          imgSrc="/images/medicine-bg.jpg"
-          icon="💊"
-          title="Medicine Finder"
-          description="Check medicine availability at nearby pharmacies"
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
+          <ServiceCard
+            to="/symptoms"
+            imgSrc="/images/symptoms-bg.jpg"
+            icon="🩺"
+            title="Symptom Checker"
+            description="Get instant preliminary diagnosis based on your symptoms"
+          />
+          <ServiceCard
+            to="/video"
+            imgSrc="/images/vcDoctor.jpg"
+            icon="📹"
+            title="Video Consultation"
+            description="Connect with certified doctors through video calls"
+          />
+          <ServiceCard
+            to="/records"
+            imgSrc="/images/records-bg.jpg"
+            icon="📄"
+            title="Health Records"
+            description="Manage and access your medical history securely"
+          />
+          <ServiceCard
+            to="/medicine"
+            imgSrc="/images/medicine-bg.jpg"
+            icon="💊"
+            title="Medicine Finder"
+            description="Check medicine availability at nearby pharmacies"
+          />
+        </div>
       </div>
 
       <Section title="Find Services">
@@ -107,76 +106,33 @@ function Home() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search doctors, labs, services"
-          className="w-full px-4 py-3 rounded-lg bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 rounded-lg bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
         />
       </Section>
     </div>
   )
 }
 
-function SymptomChecker() {
-  const [symptom, setSymptom] = useState('')
-  return (
-    <div className="space-y-6 pb-20 sm:pb-6">
-      <div className="flex items-center gap-3">
-        <NavLink to="/" className="shrink-0 w-9 h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50">←</NavLink>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Symptom Checker</h1>
-          <p className="text-sm text-zinc-600">Get preliminary health insights based on your symptoms</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-2xl bg-white border border-zinc-200 shadow-sm">
-          <div className="px-5 py-4 border-b border-zinc-200 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 grid place-items-center">🩺</div>
-            <div className="font-semibold">Describe Your Symptoms</div>
-          </div>
-          <div className="p-5">
-            <textarea
-              value={symptom}
-              onChange={(e) => setSymptom(e.target.value)}
-              rows={5}
-              placeholder="Please describe your symptoms in detail. For example: 'I have a headache that started this morning, along with a runny nose and slight fever...'"
-              className="w-full px-4 py-3 rounded-lg bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button className="mt-4 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition">
-              <span>🔎</span>
-              <span>Check Symptoms</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white border border-zinc-200 shadow-sm">
-          <div className="p-5 text-center">
-            <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-xl">⚠️</div>
-            <div className="font-semibold mb-1">Important Notice</div>
-            <p className="text-sm text-zinc-600 leading-relaxed">
-              This tool provides preliminary guidance only. It is not a substitute for professional medical diagnosis or treatment. Always consult with qualified healthcare professionals for accurate diagnosis and treatment.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+// SymptomChecker component is now imported from separate file
 
 
 function Layout() {
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
       <TopBar />
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
-        <div className="sm:flex sm:gap-6 pt-4 sm:pt-6">
+      <div className="w-full max-w-9xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 3xl:px-12">
+        <div className="flex flex-col lg:flex-row lg:gap-8 pt-2 sm:pt-4 lg:pt-6">
           <SideNav />
-          <main className="flex-1 pb-20 sm:pb-6">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/symptoms" element={<SymptomChecker />} />
-              <Route path="/video" element={<VideoConsultation />} />
-              <Route path="/records" element={<HealthRecords />} />
-              <Route path="/medicine" element={<MedicineAvailability />} />
-            </Routes>
+          <main className="flex-1 min-w-0 pb-20 sm:pb-6 lg:pb-8">
+            <div className="w-full">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/symptoms" element={<SymptomChecker />} />
+                <Route path="/video" element={<VideoConsultation />} />
+                <Route path="/records" element={<HealthRecords />} />
+                <Route path="/medicine" element={<MedicineAvailability />} />
+              </Routes>
+            </div>
           </main>
         </div>
       </div>

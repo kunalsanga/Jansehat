@@ -1,91 +1,43 @@
-import { useRef, useEffect } from "react";
+import { useMemo } from "react";
 
 function PhotoCarousel() {
-  const carouselRef = useRef(null);
-  const currentIndexRef = useRef(0);
-  const resetTimeoutRef = useRef(null);
-  const intervalRef = useRef(null);
-
   const photos = [
-    "/images/vcDoctor.jpg",
-    "/images/photo2.jpg",
-    "/images/photo3.jpg",
-    "/images/photo4.jpg",
-    "/images/photo5.jpg",
-    "/images/photo6.jpg",
-    "/images/photo7.jpg",
-    "/images/photo8.jpg",
-    "/images/photo9.jpg",
-    "/images/photo10.jpg",
+    "/images/custom/Screenshot 2025-09-19 213255.png",
+    "/images/custom/rural-health.jpg",
+    "/images/custom/istockphoto-1680653991-612x612.jpg",
+    "/images/custom/gettyimages-1498660319-640x640.jpg",
+    "/images/custom/generated-image (2).png",
+    "/images/custom/generated-image (1).png",
+    "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc.png",
+    "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc (2).png",
+    "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc (1).png",
+    "/images/custom/Gemini_Generated_Image_4wytht4wytht4wyt.png",
+    "/images/custom/Gemini_Generated_Image_4wytht4wytht4wyt (2).png",
+    "/images/custom/2021-05-05T115931Z_1_LYNXMPEH440PR_RTROPTP_4_HEALTH-CORONAVIRUS-INDIA.jpg",
+    "/images/custom/1000_F_476187086_rfTAfF13ubtmqqDMNF5HJhDEgSC3DWuI.jpg",
+    "/images/custom/616.jpg",
   ];
 
-  // Duplicate once for the "fake" continuous track
-  const loopPhotos = [...photos, ...photos];
-
-  useEffect(() => {
-    const container = carouselRef.current;
-    if (!container) return;
-
-    // Start at the first slide
-    currentIndexRef.current = 0;
-    container.scrollTo({ left: 0, behavior: "auto" });
-
-    // Clear any leftover timers
-    if (resetTimeoutRef.current) {
-      clearTimeout(resetTimeoutRef.current);
-    }
-
-    intervalRef.current = setInterval(() => {
-      // Clear any pending reset to avoid collisions
-      if (resetTimeoutRef.current) {
-        clearTimeout(resetTimeoutRef.current);
-        resetTimeoutRef.current = null;
-      }
-
-      // move to next slide index
-      currentIndexRef.current += 1;
-      const nextElem = container.children[currentIndexRef.current];
-      if (!nextElem) return;
-
-      // smooth scroll to next
-      nextElem.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
-
-      // If we just moved into the duplicated part (index === photos.length),
-      // schedule an instant jump back to the original first slide after the smooth animation ends.
-      // The small timeout gives the browser time to finish the smooth scroll.
-      if (currentIndexRef.current === photos.length) {
-        resetTimeoutRef.current = setTimeout(() => {
-          // jump back to the original first slide without animation
-          currentIndexRef.current = 0;
-          const original = container.children[0];
-          if (original) original.scrollIntoView({ behavior: "auto", block: "nearest", inline: "start" });
-        }, 420); // 420ms usually covers the browser's smooth-scroll; tweak if you see a flicker
-      }
-    }, 2000); // change interval as needed
-
-    return () => {
-      clearInterval(intervalRef.current);
-      if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
-    };
-  }, [photos.length]);
+  // Create two tracks for seamless marquee
+  const marqueePhotos = useMemo(() => [...photos, ...photos], [photos]);
 
   return (
-    <div className="w-full max-w-screen-lg mx-auto overflow-hidden">
-      <div
-        ref={carouselRef}
-        className="flex overflow-x-hidden scroll-snap-type-x-mandatory snap-x"
-        // note: tailwind's `snap-*` classes vary; you can also use "snap-x snap-mandatory"
-      >
-        {loopPhotos.map((src, idx) => (
-          <div key={idx} className="flex-shrink-0 w-full h-64 flex justify-center snap-start">
-          <img
-            src={src}
-            alt={`Photo ${idx + 1}`}
-            className="max-w-[90%] h-full object-cover rounded-lg"
-          />
+    <div className="w-full max-w-9xl mx-auto overflow-hidden">
+      <div className="relative">
+        <div className="flex gap-4 animate-marquee-fast">
+          {marqueePhotos.map((src, idx) => (
+            <div key={`a-${idx}`} className="h-32 xs:h-40 sm:h-48 md:h-56 lg:h-64 flex-shrink-0">
+              <img src={src} alt={`Photo ${idx + 1}`} className="h-full w-auto rounded-md sm:rounded-lg object-cover" />
+            </div>
+          ))}
         </div>
-        
-        ))}
+        <div className="absolute inset-0 -z-10 flex gap-4 animate-marquee-fast" style={{ transform: 'translateX(50%)' }}>
+          {marqueePhotos.map((src, idx) => (
+            <div key={`b-${idx}`} className="h-32 xs:h-40 sm:h-48 md:h-56 lg:h-64 flex-shrink-0">
+              <img src={src} alt={`Photo dup ${idx + 1}`} className="h-full w-auto rounded-md sm:rounded-lg object-cover" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

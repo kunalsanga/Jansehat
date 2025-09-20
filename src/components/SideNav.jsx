@@ -14,11 +14,11 @@ function SideNav() {
   )
 
   return (
-    <aside className="hidden sm:flex sm:flex-col sm:w-64 shrink-0 border-r border-zinc-200 bg-white">
-      <div className="px-4 py-5 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center text-white text-lg">🩺</div>
-      <div>
-          <div className="font-semibold">JanSehat</div>
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 xl:w-72 shrink-0 border-r border-zinc-200 bg-white rounded-r-xl">
+      <div className="px-4 py-4 xl:py-5 flex items-center gap-3">
+        <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl xl:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center text-white text-base xl:text-lg">🩺</div>
+        <div>
+          <div className="font-semibold text-sm xl:text-base">JanSehat</div>
           <div className="text-xs text-zinc-500">Your Health, Our Priority</div>
         </div>
       </div>
