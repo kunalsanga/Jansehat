@@ -57,7 +57,13 @@ function Home() {
     <div className="space-y-4 sm:space-y-6 lg:space-y-8 pb-20 sm:pb-6">
       {/* Hero (full-bleed) */}
       <section className="rounded-none sm:rounded-3xl bg-gradient-to-b from-blue-50 to-transparent p-3 xs:p-4 sm:p-6 lg:p-8 text-center -mx-2 sm:mx-0 lg:-mx-6 xl:-mx-8 3xl:-mx-12">
-        <div className="mx-auto mb-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center text-white text-2xl sm:text-3xl">💙</div>
+        <div className="mx-auto mb-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-white shadow-lg p-2 sm:p-3">
+          <img 
+            src="/jansehat-logo.svg" 
+            alt="JanSehat Logo" 
+            className="w-full h-full object-contain"
+          />
+        </div>
         <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight">Welcome to JanSehat</h1>
         <p className="mt-2 text-sm sm:text-base lg:text-lg text-zinc-600 max-w-2xl mx-auto">Quality healthcare from the comfort of your home</p>
 
