@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import aiService from '../services/aiService.js'
+import AIAnalysisResult from './AIAnalysisResult.jsx'
 
 function SymptomChecker() {
     const [symptom, setSymptom] = useState('')
@@ -66,19 +67,28 @@ function SymptomChecker() {
   
         {/* Connection Status */}
         <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500' : connectionStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
-            <div className="font-medium">
-              {connectionStatus === 'connected' ? 'AI Service Connected' : 
-               connectionStatus === 'error' ? 'AI Service Not Configured' : 
-               'Checking Connection...'}
+          <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3">
+            <div className={`w-4 h-4 rounded-full flex items-center justify-center ${connectionStatus === 'connected' ? 'bg-green-100' : connectionStatus === 'error' ? 'bg-red-100' : 'bg-yellow-100'}`}>
+              <div className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500' : connectionStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">
+                {connectionStatus === 'connected' ? '🤖' : 
+                 connectionStatus === 'error' ? '⚠️' : 
+                 '🔄'}
+              </span>
+              <div className="font-medium">
+                {connectionStatus === 'connected' ? 'AI Service Connected' : 
+                 connectionStatus === 'error' ? 'AI Service Not Configured' : 
+                 'Checking Connection...'}
+              </div>
             </div>
             {connectionStatus === 'error' && (
               <button 
                 onClick={checkServerConnection}
-                className="ml-auto text-sm text-blue-600 hover:text-blue-700 underline"
+                className="ml-auto text-sm text-blue-600 hover:text-blue-700 underline font-medium"
               >
-                Retry
+                Retry Connection
               </button>
             )}
           </div>
@@ -129,17 +139,17 @@ function SymptomChecker() {
               <button 
                 onClick={handleSymptomCheck}
                 disabled={isLoading || connectionStatus !== 'connected'}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Analyzing...</span>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-medium">AI Analyzing...</span>
                   </>
                 ) : (
                   <>
-                    <span>🔎</span>
-                    <span>Check Symptoms</span>
+                    <span className="text-lg">🤖</span>
+                    <span className="font-medium">Analyze Symptoms</span>
                   </>
                 )}
               </button>
@@ -160,20 +170,10 @@ function SymptomChecker() {
         {/* Results Section */}
         {result && (
           <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-sm">📋</div>
-              <div className="font-medium text-gray-800">AI Analysis Results</div>
-              <div className="ml-auto text-xs text-gray-500">
-                {new Date(result.timestamp).toLocaleString()}
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="prose prose-sm max-w-none">
-                <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
-                  {result.analysis}
-                </div>
-              </div>
-            </div>
+            <AIAnalysisResult 
+              analysis={result.analysis} 
+              timestamp={result.timestamp} 
+            />
           </div>
         )}
       </div>
