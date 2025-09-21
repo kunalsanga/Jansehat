@@ -87,7 +87,7 @@ function Home() {
           />
           <ServiceCard
             to="/records"
-            imgSrc="/digital-medical-record-mandate-concept.jpg"
+            imgSrc="/health-records.jpg"
             icon="📄"
             title="Health Records"
             description="Manage and access your medical history securely"
