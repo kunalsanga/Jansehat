@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GEMINI_API_KEY } from '../config.js';
+import { GEMINI_API_KEY } from '../../config.js';
 
 class AIService {
   constructor() {
