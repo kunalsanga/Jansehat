@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 function ServiceCard({ imgSrc, icon, title, description, to }) {
+    const [imageLoaded, setImageLoaded] = useState(false)
+    const [imageError, setImageError] = useState(false)
+
     return (
       <NavLink
         to={to}
@@ -10,8 +13,27 @@ function ServiceCard({ imgSrc, icon, title, description, to }) {
         <img
           src={imgSrc}
           alt={title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
         />
+        
+        {/* Loading placeholder */}
+        {!imageLoaded && !imageError && (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200 animate-pulse flex items-center justify-center">
+            <div className="text-blue-500 text-2xl">{icon}</div>
+          </div>
+        )}
+        
+        {/* Error fallback */}
+        {imageError && (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <div className="text-gray-500 text-2xl">{icon}</div>
+          </div>
+        )}
   
         {/* Overlay for text readability */}
         <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>

@@ -1,4 +1,8 @@
+import React, { useState } from 'react';
+
 function PhotoCarousel() {
+  const [loadedImages, setLoadedImages] = useState(new Set());
+  
   const photos = [
     "/images/vcDoctor.jpg",
     "/images/custom/616.jpg",
@@ -18,31 +22,53 @@ function PhotoCarousel() {
     "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc (2).png"
   ];
 
+  const handleImageLoad = (src) => {
+    setLoadedImages(prev => new Set([...prev, src]));
+  };
+
   return (
     <div className="w-full max-w-9xl mx-auto overflow-hidden">
       <div className="flex gap-4 animate-scroll">
         {photos.map((src, idx) => (
           <div 
             key={idx} 
-            className="h-32 xs:h-40 sm:h-48 md:h-56 lg:h-64 w-48 xs:w-56 sm:w-64 md:w-72 lg:w-80 flex-shrink-0"
+            className="h-32 xs:h-40 sm:h-48 md:h-56 lg:h-64 w-48 xs:w-56 sm:w-64 md:w-72 lg:w-80 flex-shrink-0 relative"
           >
             <img 
               src={src} 
-              alt={`Image ${idx + 1}`} 
-              className="h-full w-full rounded-md sm:rounded-lg object-cover shadow-sm" 
+              alt={`Healthcare Image ${idx + 1}`} 
+              className={`h-full w-full rounded-md sm:rounded-lg object-cover shadow-sm transition-opacity duration-300 ${
+                loadedImages.has(src) ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="lazy"
+              onLoad={() => handleImageLoad(src)}
             />
+            {!loadedImages.has(src) && (
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200 animate-pulse rounded-md sm:rounded-lg flex items-center justify-center">
+                <div className="text-blue-400 text-lg">📷</div>
+              </div>
+            )}
           </div>
         ))}
         {photos.map((src, idx) => (
           <div 
             key={`dup-${idx}`} 
-            className="h-32 xs:h-40 sm:h-48 md:h-56 lg:h-64 w-48 xs:w-56 sm:w-64 md:w-72 lg:w-80 flex-shrink-0"
+            className="h-32 xs:h-40 sm:h-48 md:h-56 lg:h-64 w-48 xs:w-56 sm:w-64 md:w-72 lg:w-80 flex-shrink-0 relative"
           >
             <img 
               src={src} 
-              alt={`Image ${idx + 1}`} 
-              className="h-full w-full rounded-md sm:rounded-lg object-cover shadow-sm" 
+              alt={`Healthcare Image ${idx + 1}`} 
+              className={`h-full w-full rounded-md sm:rounded-lg object-cover shadow-sm transition-opacity duration-300 ${
+                loadedImages.has(src) ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="lazy"
+              onLoad={() => handleImageLoad(src)}
             />
+            {!loadedImages.has(src) && (
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200 animate-pulse rounded-md sm:rounded-lg flex items-center justify-center">
+                <div className="text-blue-400 text-lg">📷</div>
+              </div>
+            )}
           </div>
         ))}
       </div>
