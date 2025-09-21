@@ -595,7 +595,7 @@ function MedicineAvailability() {
     }
   
     return (
-      <div className="space-y-4 sm:space-y-6 pb-20 sm:pb-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header with Cart */}
         <div className="flex items-center justify-between">
           <div>

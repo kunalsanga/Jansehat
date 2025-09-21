@@ -55,7 +55,7 @@ function SymptomChecker() {
     }
 
     return (
-      <div className="space-y-6 pb-20 sm:pb-6">
+      <div className="space-y-6">
         <div className="flex items-center gap-3">
           <NavLink to="/" className="shrink-0 w-9 h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50">←</NavLink>
           <div>

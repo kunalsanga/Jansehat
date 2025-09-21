@@ -54,7 +54,7 @@ function Home() {
     }
   }, [])
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 pb-20 sm:pb-6">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Hero (full-bleed) */}
       <section className="rounded-none sm:rounded-3xl bg-gradient-to-b from-blue-50 to-transparent p-3 xs:p-4 sm:p-6 lg:p-8 text-center -mx-2 sm:mx-0 lg:-mx-6 xl:-mx-8 3xl:-mx-12">
         <div className="mx-auto mb-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-white shadow-lg p-2 sm:p-3">
@@ -136,7 +136,7 @@ function Layout() {
       <div className="w-full max-w-9xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 3xl:px-12">
         <div className="flex flex-col lg:flex-row lg:gap-8 pt-2 sm:pt-4 lg:pt-6">
           <SideNav />
-          <main className="flex-1 min-w-0 pb-20 sm:pb-6 lg:pb-8">
+          <main className="flex-1 min-w-0 pb-24 sm:pb-6 lg:pb-8 mobile-container">
             <div className="w-full">
               <Routes>
                 <Route path="/" element={<Home />} />

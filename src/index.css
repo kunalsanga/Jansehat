@@ -47,6 +47,26 @@ html {
   --sal: env(safe-area-inset-left);
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 1024px) {
+  /* Ensure proper spacing for mobile tab bar */
+  .mobile-safe-bottom {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+  
+  /* Prevent horizontal overflow */
+  .mobile-container {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Better touch targets for mobile */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Focus styles for better accessibility */
 *:focus {
   outline: 2px solid transparent;
