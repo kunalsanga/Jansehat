@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { API_BASE_URL } from '../../config.js'
+import aiService from '../services/aiService.js'
 
 function SymptomChecker() {
     const [symptom, setSymptom] = useState('')
@@ -16,15 +16,15 @@ function SymptomChecker() {
 
     const checkServerConnection = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/health`)
-            if (response.ok) {
+            const healthStatus = await aiService.checkHealth()
+            if (healthStatus.status === 'OK') {
                 setConnectionStatus('connected')
             } else {
                 setConnectionStatus('error')
             }
         } catch (err) {
             setConnectionStatus('error')
-            console.error('Server connection failed:', err)
+            console.error('AI service connection failed:', err)
         }
     }
 
@@ -44,25 +44,10 @@ function SymptomChecker() {
         setResult(null)
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/symptom-check`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    symptoms: symptom
-                })
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to analyze symptoms')
-            }
-
+            const data = await aiService.analyzeSymptoms(symptom)
             setResult(data)
         } catch (err) {
-            setError(err.message || 'Unable to connect to AI service. Please check if the server is running.')
+            setError(err.message || 'Unable to connect to AI service. Please check your API configuration.')
             console.error('Symptom check error:', err)
         } finally {
             setIsLoading(false)
@@ -85,7 +70,7 @@ function SymptomChecker() {
             <div className={`w-3 h-3 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500' : connectionStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
             <div className="font-medium">
               {connectionStatus === 'connected' ? 'AI Service Connected' : 
-               connectionStatus === 'error' ? 'AI Service Disconnected' : 
+               connectionStatus === 'error' ? 'AI Service Not Configured' : 
                'Checking Connection...'}
             </div>
             {connectionStatus === 'error' && (
@@ -97,6 +82,17 @@ function SymptomChecker() {
               </button>
             )}
           </div>
+          {connectionStatus === 'error' && (
+            <div className="px-4 py-3 bg-yellow-50 border-t border-yellow-200">
+              <div className="text-sm text-yellow-800">
+                <div className="font-medium mb-1">AI Service Setup Required</div>
+                <div>To use the symptom checker, you need to configure a Gemini API key. Add your API key to the environment variables.</div>
+                <div className="mt-2 text-xs">
+                  Get your free API key from: <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
