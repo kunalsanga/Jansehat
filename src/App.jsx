@@ -24,7 +24,6 @@ function Section({ title, children }) {
 }
 
 function Home() {
-  const [search, setSearch] = useState('')
   const carouselRef = useRef(null)
   const totalSlides = 3
   const currentIndexRef = useRef(0)
@@ -74,7 +73,7 @@ function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
           <ServiceCard
             to="/symptoms"
-            imgSrc="/images/symptoms-bg.jpg"
+            imgSrc="/images/custom/istockphoto-1680653991-612x612.jpg"
             icon="🩺"
             title="Symptom Checker"
             description="Get instant preliminary diagnosis based on your symptoms"
@@ -88,28 +87,28 @@ function Home() {
           />
           <ServiceCard
             to="/records"
-            imgSrc="/images/records-bg.jpg"
+            imgSrc="/digital-medical-record-mandate-concept.jpg"
             icon="📄"
             title="Health Records"
             description="Manage and access your medical history securely"
           />
           <ServiceCard
             to="/medicine"
-            imgSrc="/images/medicine-bg.jpg"
+            imgSrc="/generated-image (3).png"
             icon="💊"
             title="Medicine Finder"
             description="Check medicine availability at nearby pharmacies"
           />
           <ServiceCard
             to="/emergency"
-            imgSrc="/images/emergency-bg.jpg"
+            imgSrc="/images/custom/2021-05-05T115931Z_1_LYNXMPEH440PR_RTROPTP_4_HEALTH-CORONAVIRUS-INDIA.jpg"
             icon="🚨"
             title="Emergency Mode"
             description="Quick access to emergency services and urgent care"
           />
           <ServiceCard
             to="/navigation"
-            imgSrc="/images/navigation-bg.jpg"
+            imgSrc="/gps-map-navigator-concept-street-maps-directions-vector-illustration_230920-2779.jpg"
             icon="🗺️"
             title="Hospital Navigation"
             description="Find and navigate to nearby hospitals and pharmacies"
@@ -117,14 +116,6 @@ function Home() {
         </div>
       </div>
 
-      <Section title="Find Services">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search doctors, labs, services"
-          className="w-full px-4 py-3 rounded-lg bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-        />
-      </Section>
     </div>
   )
 }
