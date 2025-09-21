@@ -25,8 +25,8 @@ function AIAnalysisResult({ analysis, timestamp }) {
           type: getSectionType(title)
         };
       } else if (line && currentSection) {
-        // Add content to current section
-        currentSection.content.push(line);
+        // Add content to current section with enhanced formatting
+        currentSection.content.push(enhanceTextFormatting(line));
       }
     }
     
@@ -36,6 +36,33 @@ function AIAnalysisResult({ analysis, timestamp }) {
     }
     
     return sections;
+  };
+
+  const enhanceTextFormatting = (text) => {
+    // Make bold text more prominent
+    let enhancedText = text
+      // Bold text formatting
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>')
+      // Italic text formatting
+      .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
+      // Highlight severity levels
+      .replace(/\b(High|HIGH|Urgent|URGENT|Emergency|EMERGENCY|Critical|CRITICAL)\b/g, '<span class="font-bold text-red-600 bg-red-50 px-1 rounded">$1</span>')
+      .replace(/\b(Medium|MEDIUM|Moderate|MODERATE)\b/g, '<span class="font-bold text-yellow-600 bg-yellow-50 px-1 rounded">$1</span>')
+      .replace(/\b(Low|LOW|Mild|MILD|Minor|MINOR)\b/g, '<span class="font-bold text-green-600 bg-green-50 px-1 rounded">$1</span>')
+      // Highlight important medical terms
+      .replace(/\b(immediately|urgent|emergency|severe|critical|dangerous|life-threatening)\b/gi, '<span class="font-bold text-red-700">$1</span>')
+      .replace(/\b(consult|doctor|physician|healthcare|medical|hospital|clinic)\b/gi, '<span class="font-semibold text-blue-700">$1</span>')
+      .replace(/\b(medication|medicine|drug|prescription|treatment|therapy)\b/gi, '<span class="font-semibold text-purple-700">$1</span>')
+      // Highlight numbers and percentages
+      .replace(/\b(\d+%|\d+\.\d+%|\d+\/\d+)\b/g, '<span class="font-bold text-indigo-600">$1</span>')
+      // Highlight time references
+      .replace(/\b(\d+\s*(hours?|days?|weeks?|months?|years?))\b/gi, '<span class="font-semibold text-orange-600">$1</span>')
+      // Highlight symptoms and conditions
+      .replace(/\b(fever|pain|ache|swelling|rash|nausea|vomiting|diarrhea|headache|dizziness|fatigue|cough|sore throat|shortness of breath)\b/gi, '<span class="font-semibold text-gray-800 bg-gray-100 px-1 rounded">$1</span>')
+      // Highlight important action words
+      .replace(/\b(avoid|stop|continue|increase|decrease|monitor|check|measure|rest|exercise|drink|eat|take)\b/gi, '<span class="font-semibold text-green-700">$1</span>');
+    
+    return enhancedText;
   };
 
   const getSectionType = (title) => {
@@ -139,7 +166,7 @@ function AIAnalysisResult({ analysis, timestamp }) {
                   }`}>
                     {icon}
                   </div>
-                  <h4 className={`font-semibold ${
+                  <h4 className={`font-bold text-lg ${
                     color === 'red' ? 'text-red-900' :
                     color === 'yellow' ? 'text-yellow-900' :
                     color === 'green' ? 'text-green-900' :
@@ -151,7 +178,7 @@ function AIAnalysisResult({ analysis, timestamp }) {
                   </h4>
                 </div>
                 
-                <div className={`space-y-2 ${
+                <div className={`space-y-3 ${
                   color === 'red' ? 'text-red-800' :
                   color === 'yellow' ? 'text-yellow-800' :
                   color === 'green' ? 'text-green-800' :
@@ -163,11 +190,19 @@ function AIAnalysisResult({ analysis, timestamp }) {
                     <div key={lineIndex} className="flex items-start gap-2">
                       {line.startsWith('-') || line.startsWith('•') ? (
                         <>
-                          <span className="text-xs mt-1.5">•</span>
-                          <span className="text-sm leading-relaxed">{line.replace(/^[-•]\s*/, '')}</span>
+                          <span className="text-xs mt-1.5 text-gray-500">•</span>
+                          <div 
+                            className="text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ 
+                              __html: line.replace(/^[-•]\s*/, '') 
+                            }}
+                          />
                         </>
                       ) : (
-                        <span className="text-sm leading-relaxed">{line}</span>
+                        <div 
+                          className="text-sm leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: line }}
+                        />
                       )}
                     </div>
                   ))}
