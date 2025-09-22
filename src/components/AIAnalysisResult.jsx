@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 function AIAnalysisResult({ analysis, timestamp }) {
-  const [messages, setMessages] = useState([]);
-  const [isTyping, setIsTyping] = useState(true);
-
-  // Parse the AI analysis text into conversational format
+  // Parse the AI analysis text into structured sections
   const parseAnalysis = (text) => {
     const sections = [];
     const lines = text.split('\n');
@@ -39,80 +36,6 @@ function AIAnalysisResult({ analysis, timestamp }) {
     }
     
     return sections;
-  };
-
-  // Convert structured analysis to conversational format
-  const convertToConversational = (sections) => {
-    const messages = [];
-    
-    // Add greeting message
-    messages.push({
-      type: 'ai',
-      content: "I've analyzed your symptoms and here's what I found:",
-      isGreeting: true
-    });
-
-    sections.forEach(section => {
-      if (section.type === 'conditions') {
-        messages.push({
-          type: 'ai',
-          content: `**Possible Conditions:**\n\n${section.content.join('\n')}`,
-          icon: '🩺',
-          color: 'blue'
-        });
-      } else if (section.type === 'urgency') {
-        const urgencyLevel = section.content.join(' ').toLowerCase();
-        let urgencyColor = 'green';
-        let urgencyIcon = '✅';
-        
-        if (urgencyLevel.includes('high') || urgencyLevel.includes('urgent') || urgencyLevel.includes('emergency')) {
-          urgencyColor = 'red';
-          urgencyIcon = '🚨';
-        } else if (urgencyLevel.includes('medium') || urgencyLevel.includes('moderate')) {
-          urgencyColor = 'yellow';
-          urgencyIcon = '⚠️';
-        }
-        
-        messages.push({
-          type: 'ai',
-          content: `**Urgency Level:**\n\n${section.content.join('\n')}`,
-          icon: urgencyIcon,
-          color: urgencyColor
-        });
-      } else if (section.type === 'actions') {
-        messages.push({
-          type: 'ai',
-          content: `**Recommended Actions:**\n\n${section.content.join('\n')}`,
-          icon: '📋',
-          color: 'green'
-        });
-      } else if (section.type === 'emergency') {
-        messages.push({
-          type: 'ai',
-          content: `**When to Seek Immediate Care:**\n\n${section.content.join('\n')}`,
-          icon: '🚨',
-          color: 'red'
-        });
-      } else if (section.type === 'advice') {
-        messages.push({
-          type: 'ai',
-          content: `**General Health Advice:**\n\n${section.content.join('\n')}`,
-          icon: '💡',
-          color: 'purple'
-        });
-      }
-    });
-
-    // Add disclaimer message
-    messages.push({
-      type: 'ai',
-      content: "**Important:** This is preliminary guidance only. Please consult with a qualified healthcare professional for proper diagnosis and treatment.",
-      icon: '⚠️',
-      color: 'amber',
-      isDisclaimer: true
-    });
-
-    return messages;
   };
 
   const enhanceTextFormatting = (text) => {
@@ -196,37 +119,19 @@ function AIAnalysisResult({ analysis, timestamp }) {
     return 'blue';
   };
 
-  // Initialize messages with typing animation
-  useEffect(() => {
-    const sections = parseAnalysis(analysis);
-    const chatMessages = convertToConversational(sections);
-    
-    // Simulate typing animation
-    let currentIndex = 0;
-    const typingInterval = setInterval(() => {
-      if (currentIndex < chatMessages.length) {
-        setMessages(prev => [...prev, chatMessages[currentIndex]]);
-        currentIndex++;
-      } else {
-        setIsTyping(false);
-        clearInterval(typingInterval);
-      }
-    }, 800);
-
-    return () => clearInterval(typingInterval);
-  }, [analysis]);
+  const sections = parseAnalysis(analysis);
 
   return (
     <div className="space-y-4">
-      {/* Chat Header */}
+      {/* Header */}
       <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-lg">
             🤖
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">AI Health Assistant</h3>
-            <p className="text-sm text-gray-600">Analyzing your symptoms...</p>
+            <h3 className="font-semibold text-gray-900">AI Health Analysis</h3>
+            <p className="text-sm text-gray-600">Preliminary assessment based on your symptoms</p>
           </div>
         </div>
         <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
@@ -234,59 +139,95 @@ function AIAnalysisResult({ analysis, timestamp }) {
         </div>
       </div>
 
-      {/* Chat Messages */}
-      <div className="space-y-4 max-h-96 overflow-y-auto">
-        {messages.map((message, index) => (
-          <div key={index} className="flex items-start gap-3">
-            {/* AI Avatar */}
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-sm flex-shrink-0">
-              {message.icon || '🤖'}
-            </div>
-            
-            {/* Message Content */}
-            <div className={`flex-1 rounded-lg p-3 ${
-              message.isGreeting ? 'bg-blue-50 border border-blue-200' :
-              message.isDisclaimer ? 'bg-amber-50 border border-amber-200' :
-              message.color === 'red' ? 'bg-red-50 border border-red-200' :
-              message.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
-              message.color === 'green' ? 'bg-green-50 border border-green-200' :
-              message.color === 'purple' ? 'bg-purple-50 border border-purple-200' :
-              'bg-gray-50 border border-gray-200'
+      {/* Analysis Sections */}
+      <div className="space-y-4">
+        {sections.map((section, index) => {
+          const color = section.type === 'urgency' ? getUrgencyColor(section.content) : getSectionColor(section.type);
+          const icon = getSectionIcon(section.type);
+          
+          return (
+            <div key={index} className={`rounded-lg border-l-4 ${
+              color === 'red' ? 'border-red-500 bg-red-50' :
+              color === 'yellow' ? 'border-yellow-500 bg-yellow-50' :
+              color === 'green' ? 'border-green-500 bg-green-50' :
+              color === 'blue' ? 'border-blue-500 bg-blue-50' :
+              color === 'purple' ? 'border-purple-500 bg-purple-50' :
+              'border-gray-500 bg-gray-50'
             }`}>
-              <div 
-                className={`text-sm leading-relaxed ${
-                  message.isGreeting ? 'text-blue-800' :
-                  message.isDisclaimer ? 'text-amber-800' :
-                  message.color === 'red' ? 'text-red-800' :
-                  message.color === 'yellow' ? 'text-yellow-800' :
-                  message.color === 'green' ? 'text-green-800' :
-                  message.color === 'purple' ? 'text-purple-800' :
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-8 h-8 rounded-full grid place-items-center text-lg ${
+                    color === 'red' ? 'bg-red-100 text-red-600' :
+                    color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
+                    color === 'green' ? 'bg-green-100 text-green-600' :
+                    color === 'blue' ? 'bg-blue-100 text-blue-600' :
+                    color === 'purple' ? 'bg-purple-100 text-purple-600' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {icon}
+                  </div>
+                  <h4 className={`font-bold text-lg ${
+                    color === 'red' ? 'text-red-900' :
+                    color === 'yellow' ? 'text-yellow-900' :
+                    color === 'green' ? 'text-green-900' :
+                    color === 'blue' ? 'text-blue-900' :
+                    color === 'purple' ? 'text-purple-900' :
+                    'text-gray-900'
+                  }`}>
+                    {section.title}
+                  </h4>
+                </div>
+                
+                <div className={`space-y-3 ${
+                  color === 'red' ? 'text-red-800' :
+                  color === 'yellow' ? 'text-yellow-800' :
+                  color === 'green' ? 'text-green-800' :
+                  color === 'blue' ? 'text-blue-800' :
+                  color === 'purple' ? 'text-purple-800' :
                   'text-gray-800'
-                }`}
-                dangerouslySetInnerHTML={{ 
-                  __html: enhanceTextFormatting(message.content) 
-                }}
-              />
-            </div>
-          </div>
-        ))}
-        
-        {/* Typing Indicator */}
-        {isTyping && (
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-sm flex-shrink-0">
-              🤖
-            </div>
-            <div className="flex-1 rounded-lg p-3 bg-gray-50 border border-gray-200">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <span className="text-sm text-gray-500 ml-2">AI is thinking...</span>
+                }`}>
+                  {section.content.map((line, lineIndex) => (
+                    <div key={lineIndex} className="flex items-start gap-2">
+                      {line.startsWith('-') || line.startsWith('•') ? (
+                        <>
+                          <span className="text-xs mt-1.5 text-gray-500">•</span>
+                          <div 
+                            className="text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ 
+                              __html: line.replace(/^[-•]\s*/, '') 
+                            }}
+                          />
+                        </>
+                      ) : (
+                        <div 
+                          className="text-sm leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: line }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Disclaimer */}
+      <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 grid place-items-center text-sm flex-shrink-0 mt-0.5">
+            ⚠️
           </div>
-        )}
+          <div>
+            <h4 className="font-semibold text-amber-900 mb-2">Important Medical Disclaimer</h4>
+            <p className="text-sm text-amber-800 leading-relaxed">
+              This AI analysis is for preliminary guidance only and should not replace professional medical diagnosis or treatment. 
+              Always consult with qualified healthcare professionals for accurate diagnosis and treatment. 
+              Seek immediate medical care for severe or worsening symptoms.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
