@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import './App.css'
 import TopBar from "./components/TopBar"
@@ -24,6 +25,7 @@ function Section({ title, children }) {
 }
 
 function Home() {
+  const { t } = useTranslation()
   const carouselRef = useRef(null)
   const totalSlides = 3
   const currentIndexRef = useRef(0)
@@ -64,8 +66,8 @@ function Home() {
             className="w-full h-full object-contain"
           />
         </div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight">Welcome to JanSehat</h1>
-        <p className="mt-2 text-sm sm:text-base lg:text-lg text-zinc-600 max-w-2xl mx-auto">Quality healthcare from the comfort of your home</p>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight">{t('home.welcome')}</h1>
+        <p className="mt-2 text-sm sm:text-base lg:text-lg text-zinc-600 max-w-2xl mx-auto">{t('home.qualityCare')}</p>
 
         <div className="mt-4 sm:mt-6 w-full overflow-x-hidden px-2 sm:px-4">
           <PhotoCarousel />
@@ -74,50 +76,50 @@ function Home() {
 
       {/* Services Section */}
       <div className="space-y-4 sm:space-y-6">
-        <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-center lg:text-left">Our Services</h2>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-center lg:text-left">{t('home.services')}</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
           <ServiceCard
             to="/symptoms"
             imgSrc="/images/custom/istockphoto-1680653991-612x612.jpg"
             icon="🩺"
-            title="Symptom Checker"
-            description="Get instant preliminary diagnosis based on your symptoms"
+            title={t('home.symptomChecker')}
+            description={t('home.descSymptom')}
           />
           <ServiceCard
             to="/video"
             imgSrc="/images/vcDoctor.jpg"
             icon="📹"
-            title="Video Consultation"
-            description="Connect with certified doctors through video calls"
+            title={t('home.videoConsultation')}
+            description={t('home.descVideo')}
           />
           <ServiceCard
             to="/records"
             imgSrc="/health-records.jpg"
             icon="📄"
-            title="Health Records"
-            description="Manage and access your medical history securely"
+            title={t('home.healthRecords')}
+            description={t('home.descRecords')}
           />
           <ServiceCard
             to="/medicine"
             imgSrc="/generated-image (3).png"
             icon="💊"
-            title="Medicine Finder"
-            description="Check medicine availability at nearby pharmacies"
+            title={t('home.medicineFinder')}
+            description={t('home.descMedicine')}
           />
           <ServiceCard
             to="/emergency"
             imgSrc="/images/custom/2021-05-05T115931Z_1_LYNXMPEH440PR_RTROPTP_4_HEALTH-CORONAVIRUS-INDIA.jpg"
             icon="🚨"
-            title="Emergency Mode"
-            description="Quick access to emergency services and urgent care"
+            title={t('home.emergencyMode')}
+            description={t('home.descEmergency')}
           />
           <ServiceCard
             to="/navigation"
             imgSrc="/gps-map-navigator-concept-street-maps-directions-vector-illustration_230920-2779.jpg"
             icon="🗺️"
-            title="Hospital Navigation"
-            description="Find and navigate to nearby hospitals and pharmacies"
+            title={t('home.hospitalNavigation')}
+            description={t('home.descNavigation')}
           />
         </div>
       </div>

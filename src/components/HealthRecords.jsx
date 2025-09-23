@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 function HealthRecords() {
+    const { t } = useTranslation()
     const [tab, setTab] = useState('profile')
     const [editingProfile, setEditingProfile] = useState(false)
     const [profileData, setProfileData] = useState({
@@ -225,30 +227,30 @@ function HealthRecords() {
         <div className="flex items-center gap-3">
           <NavLink to="/" className="shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50 text-sm sm:text-base">←</NavLink>
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">Health Records</h1>
-            <p className="text-xs sm:text-sm text-zinc-600">Manage your medical information securely</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">{t('records.title')}</h1>
+            <p className="text-xs sm:text-sm text-zinc-600">{t('records.subtitle')}</p>
           </div>
         </div>
   
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto">
           <button onClick={() => setTab('profile')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='profile' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">👤</span>Profile
+            <span className="mr-1 sm:mr-2">👤</span>{t('records.tabs.profile')}
           </button>
           <button onClick={() => setTab('history')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='history' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">🩺</span>Medical History
+            <span className="mr-1 sm:mr-2">🩺</span>{t('records.tabs.history')}
           </button>
           <button onClick={() => setTab('lab')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='lab' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">🧪</span>Lab Results
+            <span className="mr-1 sm:mr-2">🧪</span>{t('records.tabs.lab')}
           </button>
           <button onClick={() => setTab('prescriptions')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='prescriptions' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">💊</span>Prescriptions
+            <span className="mr-1 sm:mr-2">💊</span>{t('records.tabs.prescriptions')}
           </button>
           <button onClick={() => setTab('vaccines')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='vaccines' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">💉</span>Vaccinations
+            <span className="mr-1 sm:mr-2">💉</span>{t('records.tabs.vaccines')}
           </button>
           <button onClick={() => setTab('appointments')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='appointments' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">📅</span>Appointments
+            <span className="mr-1 sm:mr-2">📅</span>{t('records.tabs.appointments')}
           </button>
         </div>
   
@@ -258,19 +260,19 @@ function HealthRecords() {
             <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-200 flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-100 text-purple-600 grid place-items-center text-sm sm:text-base">👤</div>
-                <div className="font-semibold text-sm sm:text-base">Patient Profile</div>
+                <div className="font-semibold text-sm sm:text-base">{t('records.patientProfile')}</div>
               </div>
               <button 
                 onClick={() => setEditingProfile(!editingProfile)}
                 className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-zinc-300 hover:bg-zinc-50 text-xs sm:text-sm"
               >
-                {editingProfile ? 'Save' : 'Edit Profile'}
+                {editingProfile ? t('records.save') : t('records.editProfile')}
               </button>
             </div>
             <div className="p-4 sm:p-5 space-y-4 sm:space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Full Name</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.fullName')}</label>
                   <input 
                     type="text" 
                     value={profileData.fullName}
@@ -280,7 +282,7 @@ function HealthRecords() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Age</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.age')}</label>
                   <input 
                     type="number" 
                     value={profileData.age}
@@ -292,7 +294,7 @@ function HealthRecords() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Phone Number</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.phoneNumber')}</label>
                   <input 
                     type="tel" 
                     value={profileData.phone}
@@ -302,22 +304,22 @@ function HealthRecords() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Gender</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.gender')}</label>
                   <select 
                     value={profileData.gender}
                     onChange={(e) => setProfileData({...profileData, gender: e.target.value})}
                     disabled={!editingProfile}
                     className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50"
                   >
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
+                    <option>{t('records.male')}</option>
+                    <option>{t('records.female')}</option>
+                    <option>{t('records.other')}</option>
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Blood Type</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.bloodType')}</label>
                   <input 
                     type="text" 
                     value={profileData.bloodType}
@@ -327,7 +329,7 @@ function HealthRecords() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Height</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.height')}</label>
                   <input 
                     type="text" 
                     value={profileData.height}
@@ -338,7 +340,7 @@ function HealthRecords() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium mb-1">Emergency Contact</label>
+                <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.emergencyContact')}</label>
                 <input 
                   type="tel" 
                   value={profileData.emergencyContact}
@@ -349,7 +351,7 @@ function HealthRecords() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Insurance Provider</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.insuranceProvider')}</label>
                   <input 
                     type="text" 
                     value={profileData.insuranceProvider}
@@ -359,7 +361,7 @@ function HealthRecords() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Policy Number</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.policyNumber')}</label>
                   <input 
                     type="text" 
                     value={profileData.policyNumber}
@@ -390,9 +392,9 @@ function HealthRecords() {
                   </span>
                 </div>
                 <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">Date:</span> {record.date}</div>
-                  <div><span className="font-medium">Treatment:</span> {record.treatment}</div>
-                  <div><span className="font-medium">Notes:</span> {record.notes}</div>
+                  <div><span className="font-medium">{t('records.date')}</span> {record.date}</div>
+                  <div><span className="font-medium">{t('records.treatment')}</span> {record.treatment}</div>
+                  <div><span className="font-medium">{t('records.notes')}</span> {record.notes}</div>
                 </div>
               </div>
             ))}
@@ -446,14 +448,14 @@ function HealthRecords() {
                   </span>
                 </div>
                 <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">Prescribed by:</span> {prescription.prescribedBy}</div>
-                  <div><span className="font-medium">Date:</span> {prescription.prescribedDate}</div>
-                  <div><span className="font-medium">Pharmacy:</span> {prescription.pharmacy}</div>
-                  <div><span className="font-medium">Refills remaining:</span> {prescription.refills}</div>
+                  <div><span className="font-medium">{t('records.prescribedBy')}</span> {prescription.prescribedBy}</div>
+                  <div><span className="font-medium">{t('records.date')}</span> {prescription.prescribedDate}</div>
+                  <div><span className="font-medium">{t('records.pharmacy')}</span> {prescription.pharmacy}</div>
+                  <div><span className="font-medium">{t('records.refillsRemaining')}</span> {prescription.refills}</div>
                 </div>
                 {prescription.status === 'Active' && (
                   <button className="mt-3 px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600">
-                    Request Refill
+                    {t('records.requestRefill')}
                   </button>
                 )}
               </div>
@@ -469,7 +471,7 @@ function HealthRecords() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="font-semibold text-sm sm:text-base">{vaccine.vaccine}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-600">Administered by {vaccine.administeredBy}</p>
+                    <p className="text-xs sm:text-sm text-zinc-600">{t('records.administeredBy')} {vaccine.administeredBy}</p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs ${
                     vaccine.status === 'Up to date' ? 'bg-green-100 text-green-700' : 
@@ -479,8 +481,8 @@ function HealthRecords() {
                   </span>
                 </div>
                 <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">Date administered:</span> {vaccine.date}</div>
-                  <div><span className="font-medium">Next due:</span> {vaccine.nextDue}</div>
+                  <div><span className="font-medium">{t('records.dateAdministered')}</span> {vaccine.date}</div>
+                  <div><span className="font-medium">{t('records.nextDue')}</span> {vaccine.nextDue}</div>
                 </div>
               </div>
             ))}
@@ -498,20 +500,20 @@ function HealthRecords() {
                     <p className="text-xs sm:text-sm text-zinc-600">{appointment.doctor} • {appointment.specialty}</p>
                   </div>
                   <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
-                    Upcoming
+                    {t('records.upcoming')}
                   </span>
                 </div>
                 <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">Date:</span> {appointment.date}</div>
-                  <div><span className="font-medium">Time:</span> {appointment.time}</div>
-                  <div><span className="font-medium">Location:</span> {appointment.location}</div>
+                  <div><span className="font-medium">{t('records.date')}</span> {appointment.date}</div>
+                  <div><span className="font-medium">{t('records.time') || 'Time:'}</span> {appointment.time}</div>
+                  <div><span className="font-medium">{t('records.location')}</span> {appointment.location}</div>
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600">
-                    Reschedule
+                    {t('records.reschedule')}
                   </button>
                   <button className="px-3 py-1.5 border border-zinc-300 text-zinc-700 rounded-lg text-xs hover:bg-zinc-50">
-                    Cancel
+                    {t('records.cancel')}
                   </button>
                 </div>
               </div>

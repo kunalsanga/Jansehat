@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import aiService from '../services/aiService.js'
 import AIAnalysisResult from './AIAnalysisResult.jsx'
 
 function SymptomChecker() {
+    const { t } = useTranslation()
     const [symptom, setSymptom] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [result, setResult] = useState(null)
@@ -31,12 +33,12 @@ function SymptomChecker() {
 
     const handleSymptomCheck = async () => {
         if (!symptom.trim()) {
-            setError('Please describe your symptoms')
+            setError(t('symptoms.errorEmpty'))
             return
         }
 
         if (symptom.trim().length < 10) {
-            setError('Please provide more detailed symptoms (at least 10 characters)')
+            setError(t('symptoms.errorShort'))
             return
         }
 
@@ -48,7 +50,7 @@ function SymptomChecker() {
             const data = await aiService.analyzeSymptoms(symptom)
             setResult(data)
         } catch (err) {
-            setError(err.message || 'Unable to connect to AI service. Please check your API configuration.')
+            setError(err.message || t('symptoms.statusError'))
             console.error('Symptom check error:', err)
         } finally {
             setIsLoading(false)
@@ -60,8 +62,8 @@ function SymptomChecker() {
         <div className="flex items-center gap-3">
           <NavLink to="/" className="shrink-0 w-9 h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50">←</NavLink>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Symptom Checker</h1>
-            <p className="text-sm text-zinc-600">Get preliminary health insights based on your symptoms</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{t('symptoms.title')}</h1>
+            <p className="text-sm text-zinc-600">{t('symptoms.subtitle')}</p>
           </div>
         </div>
   
@@ -78,9 +80,9 @@ function SymptomChecker() {
                  '🔄'}
               </span>
               <div className="font-medium">
-                {connectionStatus === 'connected' ? 'AI Service Connected' : 
-                 connectionStatus === 'error' ? 'AI Service Not Configured' : 
-                 'Checking Connection...'}
+                {connectionStatus === 'connected' ? t('symptoms.statusConnected') : 
+                 connectionStatus === 'error' ? t('symptoms.statusError') : 
+                 t('symptoms.statusChecking')}
               </div>
             </div>
             {connectionStatus === 'error' && (
@@ -88,17 +90,17 @@ function SymptomChecker() {
                 onClick={checkServerConnection}
                 className="ml-auto text-sm text-blue-600 hover:text-blue-700 underline font-medium"
               >
-                Retry Connection
+                {t('symptoms.retry')}
               </button>
             )}
           </div>
           {connectionStatus === 'error' && (
             <div className="px-4 py-3 bg-yellow-50 border-t border-yellow-200">
               <div className="text-sm text-yellow-800">
-                <div className="font-medium mb-1">AI Service Setup Required</div>
-                <div>To use the symptom checker, you need to configure a Gemini API key. Add your API key to the environment variables.</div>
+                <div className="font-medium mb-1">{t('symptoms.setupRequired')}</div>
+                <div>{t('symptoms.setupGuide')}</div>
                 <div className="mt-2 text-xs">
-                  Get your free API key from: <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a>
+                  {t('symptoms.getKey')} <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a>
                 </div>
               </div>
             </div>
@@ -109,17 +111,17 @@ function SymptomChecker() {
           <div className="lg:col-span-2 rounded-lg bg-white border border-gray-200 shadow-sm">
             <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 grid place-items-center">🩺</div>
-              <div className="font-medium">Describe Your Symptoms</div>
+              <div className="font-medium">{t('symptoms.describeTitle')}</div>
             </div>
             <div className="p-5 space-y-4">
               {/* Symptoms */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Describe Your Symptoms *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('symptoms.describeLabel')}</label>
                 <textarea
                   value={symptom}
                   onChange={(e) => setSymptom(e.target.value)}
                   rows={5}
-                  placeholder="Describe your symptoms here..."
+                  placeholder={t('symptoms.describePlaceholder')}
                   className="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -129,7 +131,7 @@ function SymptomChecker() {
                 <div className="p-3 rounded-lg bg-red-50 border border-red-200">
                   <div className="flex items-center gap-2 text-red-800">
                     <span>⚠️</span>
-                    <span className="font-medium">Error:</span>
+                    <span className="font-medium">{t('symptoms.errorPrefix')}</span>
                     <span>{error}</span>
                   </div>
                 </div>
@@ -144,12 +146,12 @@ function SymptomChecker() {
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span className="font-medium">AI Analyzing...</span>
+                    <span className="font-medium">{t('symptoms.btnAnalyzing')}</span>
                   </>
                 ) : (
                   <>
                     <span className="text-lg">🤖</span>
-                    <span className="font-medium">Analyze Symptoms</span>
+                    <span className="font-medium">{t('symptoms.btnAnalyze')}</span>
                   </>
                 )}
               </button>
@@ -159,9 +161,9 @@ function SymptomChecker() {
           <div className="rounded-2xl bg-white border border-zinc-200 shadow-sm">
             <div className="p-5 text-center">
               <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-xl">⚠️</div>
-              <div className="font-semibold mb-1">Important Notice</div>
+              <div className="font-semibold mb-1">{t('symptoms.noticeTitle')}</div>
               <p className="text-sm text-zinc-600 leading-relaxed">
-                This tool provides preliminary guidance only. It is not a substitute for professional medical diagnosis or treatment. Always consult with qualified healthcare professionals for accurate diagnosis and treatment.
+                {t('symptoms.noticeText')}
               </p>
             </div>
           </div>

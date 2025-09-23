@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 function EmergencyMode() {
+    const { t } = useTranslation()
     const [emergencyType, setEmergencyType] = useState('')
     const [location, setLocation] = useState('')
     const [isCalling, setIsCalling] = useState(false)
@@ -9,49 +11,49 @@ function EmergencyMode() {
     const emergencyServices = [
         {
             id: 1,
-            name: 'Ambulance',
+            name: t('emergency.services.ambulance.name'),
             number: '108',
-            description: 'Medical emergency transport',
+            description: t('emergency.services.ambulance.desc'),
             icon: '🚑',
             color: 'bg-red-500'
         },
         {
             id: 2,
-            name: 'Police',
+            name: t('emergency.services.police.name'),
             number: '100',
-            description: 'Law enforcement emergency',
+            description: t('emergency.services.police.desc'),
             icon: '👮',
             color: 'bg-blue-500'
         },
         {
             id: 3,
-            name: 'Fire Department',
+            name: t('emergency.services.fire.name'),
             number: '101',
-            description: 'Fire and rescue services',
+            description: t('emergency.services.fire.desc'),
             icon: '🚒',
             color: 'bg-orange-500'
         },
         {
             id: 4,
-            name: 'Women Helpline',
+            name: t('emergency.services.women.name'),
             number: '1091',
-            description: 'Women safety and support',
+            description: t('emergency.services.women.desc'),
             icon: '👩',
             color: 'bg-pink-500'
         },
         {
             id: 5,
-            name: 'Child Helpline',
+            name: t('emergency.services.child.name'),
             number: '1098',
-            description: 'Child protection services',
+            description: t('emergency.services.child.desc'),
             icon: '👶',
             color: 'bg-green-500'
         },
         {
             id: 6,
-            name: 'Mental Health',
+            name: t('emergency.services.mental.name'),
             number: '1800-599-0019',
-            description: 'Mental health crisis support',
+            description: t('emergency.services.mental.desc'),
             icon: '🧠',
             color: 'bg-purple-500'
         }
@@ -60,44 +62,43 @@ function EmergencyMode() {
     const nearbyHospitals = [
         {
             id: 1,
-            name: 'Apollo Hospital',
-            distance: '2.3 km',
-            address: '123 Medical District, City',
-            phone: '+1-555-0123',
+            name: t('emergency.hospitals.h1.name'),
+            distance: t('emergency.hospitals.h1.distance'),
+            address: t('emergency.hospitals.h1.address'),
+            phone: t('emergency.hospitals.h1.phone'),
             emergency: true,
-            specialties: ['Emergency', 'Cardiology', 'Neurology']
+            specialties: t('emergency.hospitals.h1.specialties', { returnObjects: true })
         },
         {
             id: 2,
-            name: 'City General Hospital',
-            distance: '1.8 km',
-            address: '456 Health Street, City',
-            phone: '+1-555-0456',
+            name: t('emergency.hospitals.h2.name'),
+            distance: t('emergency.hospitals.h2.distance'),
+            address: t('emergency.hospitals.h2.address'),
+            phone: t('emergency.hospitals.h2.phone'),
             emergency: true,
-            specialties: ['Emergency', 'Trauma', 'Surgery']
+            specialties: t('emergency.hospitals.h2.specialties', { returnObjects: true })
         },
         {
             id: 3,
-            name: 'Metro Medical Center',
-            distance: '3.1 km',
-            address: '789 Care Avenue, City',
-            phone: '+1-555-0789',
+            name: t('emergency.hospitals.h3.name'),
+            distance: t('emergency.hospitals.h3.distance'),
+            address: t('emergency.hospitals.h3.address'),
+            phone: t('emergency.hospitals.h3.phone'),
             emergency: true,
-            specialties: ['Emergency', 'Pediatrics', 'Orthopedics']
+            specialties: t('emergency.hospitals.h3.specialties', { returnObjects: true })
         }
     ]
 
     const handleEmergencyCall = (service) => {
         setIsCalling(true)
-        // Simulate calling
         setTimeout(() => {
             setIsCalling(false)
-            alert(`Calling ${service.name} at ${service.number}`)
+            alert(t('emergency.calling', { name: service.name, number: service.number }))
         }, 2000)
     }
 
     const handleHospitalCall = (hospital) => {
-        alert(`Calling ${hospital.name} at ${hospital.phone}`)
+        alert(t('emergency.callingHospital', { name: hospital.name, phone: hospital.phone }))
     }
 
     return (
@@ -106,8 +107,8 @@ function EmergencyMode() {
             <div className="flex items-center gap-3">
                 <NavLink to="/" className="shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50 text-sm sm:text-base">←</NavLink>
                 <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">Emergency Mode</h1>
-                    <p className="text-xs sm:text-sm text-zinc-600">Quick access to emergency services and urgent care</p>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">{t('emergency.title')}</h1>
+                    <p className="text-xs sm:text-sm text-zinc-600">{t('emergency.subtitle')}</p>
                 </div>
             </div>
 
@@ -116,8 +117,8 @@ function EmergencyMode() {
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center text-xl">🚨</div>
                     <div>
-                        <h3 className="font-semibold text-red-800">Emergency Alert</h3>
-                        <p className="text-sm text-red-700">If this is a life-threatening emergency, call 108 immediately or go to the nearest emergency room.</p>
+                        <h3 className="font-semibold text-red-800">{t('emergency.alertTitle')}</h3>
+                        <p className="text-sm text-red-700">{t('emergency.alertText')}</p>
                     </div>
                 </div>
             </div>
@@ -125,8 +126,8 @@ function EmergencyMode() {
             {/* Emergency Services */}
             <div className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm">
                 <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-200">
-                    <h2 className="text-lg font-semibold">Emergency Services</h2>
-                    <p className="text-sm text-zinc-600">Tap to call emergency services</p>
+                    <h2 className="text-lg font-semibold">{t('emergency.servicesTitle')}</h2>
+                    <p className="text-sm text-zinc-600">{t('emergency.servicesSubtitle')}</p>
                 </div>
                 <div className="p-4 sm:p-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -156,8 +157,8 @@ function EmergencyMode() {
             {/* Nearby Hospitals */}
             <div className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm">
                 <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-200">
-                    <h2 className="text-lg font-semibold">Nearby Emergency Hospitals</h2>
-                    <p className="text-sm text-zinc-600">Emergency-ready hospitals in your area</p>
+                    <h2 className="text-lg font-semibold">{t('emergency.nearbyHospitalsTitle')}</h2>
+                    <p className="text-sm text-zinc-600">{t('emergency.nearbyHospitalsSubtitle')}</p>
                 </div>
                 <div className="p-4 sm:p-5 space-y-3">
                     {nearbyHospitals.map((hospital) => (
@@ -165,7 +166,7 @@ function EmergencyMode() {
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-semibold text-sm">{hospital.name}</h3>
-                                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Emergency</span>
+                                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">{t('emergency.badgeEmergency')}</span>
                                 </div>
                                 <p className="text-xs text-zinc-600 mb-1">{hospital.address}</p>
                                 <div className="flex items-center gap-4 text-xs text-zinc-500">
@@ -184,7 +185,7 @@ function EmergencyMode() {
                                 onClick={() => handleHospitalCall(hospital)}
                                 className="ml-3 px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs hover:bg-red-600 transition"
                             >
-                                Call Now
+                                {t('emergency.callNow')}
                             </button>
                         </div>
                     ))}
@@ -194,23 +195,23 @@ function EmergencyMode() {
             {/* Quick Actions */}
             <div className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm">
                 <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-200">
-                    <h2 className="text-lg font-semibold">Quick Actions</h2>
+                    <h2 className="text-lg font-semibold">{t('emergency.quickActionsTitle')}</h2>
                 </div>
                 <div className="p-4 sm:p-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button className="p-3 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-left">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="text-lg">📍</span>
-                                <span className="font-medium text-sm">Share Location</span>
+                                <span className="font-medium text-sm">{t('emergency.shareLocation')}</span>
                             </div>
-                            <p className="text-xs text-zinc-600">Share your current location with emergency contacts</p>
+                            <p className="text-xs text-zinc-600">{t('emergency.shareLocationDesc')}</p>
                         </button>
                         <button className="p-3 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-left">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="text-lg">📋</span>
-                                <span className="font-medium text-sm">Medical Info</span>
+                                <span className="font-medium text-sm">{t('emergency.medicalInfo')}</span>
                             </div>
-                            <p className="text-xs text-zinc-600">Quick access to your medical information</p>
+                            <p className="text-xs text-zinc-600">{t('emergency.medicalInfoDesc')}</p>
                         </button>
                     </div>
                 </div>

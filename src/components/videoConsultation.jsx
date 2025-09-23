@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 function VideoConsultation() {
+    const { t } = useTranslation()
     const [isInCall, setIsInCall] = useState(false)
     const [isCallConnected, setIsCallConnected] = useState(false)
     const [isMuted, setIsMuted] = useState(false)
@@ -12,7 +14,7 @@ function VideoConsultation() {
         phoneNumber: '',
         preferredDate: '',
         preferredTime: '',
-        consultationType: 'Video Call',
+        consultationType: t('video.typeVideo'),
         symptoms: ''
     })
     
@@ -21,37 +23,37 @@ function VideoConsultation() {
     const localStreamRef = useRef(null)
     const callTimerRef = useRef(null)
 
-    // Dummy doctors data
+    // Localized doctors data
     const availableDoctors = [
         {
             id: 1,
-            name: 'Dr. Sarah Johnson',
-            specialty: 'General Medicine',
+            name: t('video.doctors.d1.name'),
+            specialty: t('video.doctors.d1.specialty'),
             experience: '8 years',
             rating: 4.9,
             avatar: '👩‍⚕️',
-            status: 'Available',
-            nextAvailable: 'Now'
+            status: t('video.doctors.d1.status'),
+            nextAvailable: t('video.doctors.d1.next')
         },
         {
             id: 2,
-            name: 'Dr. Michael Chen',
-            specialty: 'Cardiology',
+            name: t('video.doctors.d2.name'),
+            specialty: t('video.doctors.d2.specialty'),
             experience: '12 years',
             rating: 4.8,
             avatar: '👨‍⚕️',
-            status: 'Available',
-            nextAvailable: '5 mins'
+            status: t('video.doctors.d2.status'),
+            nextAvailable: t('video.doctors.d2.next')
         },
         {
             id: 3,
-            name: 'Dr. Emily Rodriguez',
-            specialty: 'Pediatrics',
+            name: t('video.doctors.d3.name'),
+            specialty: t('video.doctors.d3.specialty'),
             experience: '6 years',
             rating: 4.9,
             avatar: '👩‍⚕️',
-            status: 'Busy',
-            nextAvailable: '30 mins'
+            status: t('video.doctors.d3.status'),
+            nextAvailable: t('video.doctors.d3.next')
         }
     ]
 
@@ -84,15 +86,13 @@ function VideoConsultation() {
     // Start video call
     const startVideoCall = async () => {
         if (!selectedDoctor) {
-            alert('Please select a doctor first')
+            alert(t('video.availableDoctors'))
             return
         }
 
-        console.log('Starting video call...')
         const mediaInitialized = await initializeMedia()
         if (!mediaInitialized) return
 
-        console.log('Media initialized, starting call...')
         setIsInCall(true)
         
         // Start call timer
@@ -102,7 +102,6 @@ function VideoConsultation() {
 
         // Simulate doctor joining after 3 seconds
         setTimeout(() => {
-            console.log('Doctor connected')
             setIsCallConnected(true)
         }, 3000)
     }
@@ -154,7 +153,7 @@ function VideoConsultation() {
     const handleSubmit = (e) => {
         e.preventDefault()
         if (!selectedDoctor) {
-            alert('Please select a doctor first')
+            alert(t('video.availableDoctors'))
             return
         }
         startVideoCall()
@@ -187,7 +186,7 @@ function VideoConsultation() {
           <NavLink to="/" className="shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50 text-sm sm:text-base">←</NavLink>
           <div>
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">
-              {isInCall ? 'Video Consultation' : 'Book Your Consultation'}
+              {isInCall ? t('video.inCallTitle') : t('video.pageTitle')}
             </h1>
           </div>
         </div>
@@ -198,15 +197,15 @@ function VideoConsultation() {
             <div className="xl:col-span-2 rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm">
               <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-200 flex items-center gap-2 sm:gap-3">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-green-100 text-green-600 grid place-items-center text-sm sm:text-base">📅</div>
-                <div className="font-semibold text-sm sm:text-base">Book Your Consultation</div>
+                <div className="font-semibold text-sm sm:text-base">{t('video.sectionTitle')}</div>
               </div>
               <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 sm:space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">Patient Name *</label>
+                    <label className="block text-xs sm:text-sm font-medium mb-1">{t('video.patientName')}</label>
                     <input 
                       type="text" 
-                      placeholder="Enter your full name" 
+                      placeholder={t('video.patientNamePh')} 
                       value={formData.patientName}
                       onChange={(e) => setFormData({...formData, patientName: e.target.value})}
                       required
@@ -214,10 +213,10 @@ function VideoConsultation() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">Phone Number *</label>
+                    <label className="block text-xs sm:text-sm font-medium mb-1">{t('video.phoneNumber')}</label>
                     <input 
                       type="tel" 
-                      placeholder="Enter your phone number" 
+                      placeholder={t('video.phoneNumberPh')} 
                       value={formData.phoneNumber}
                       onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
                       required
@@ -227,7 +226,7 @@ function VideoConsultation() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">Preferred Date *</label>
+                    <label className="block text-xs sm:text-sm font-medium mb-1">{t('video.preferredDate')}</label>
                     <div className="relative">
                       <input 
                         type="date" 
@@ -240,14 +239,14 @@ function VideoConsultation() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">Preferred Time *</label>
+                    <label className="block text-xs sm:text-sm font-medium mb-1">{t('video.preferredTime')}</label>
                     <select 
                       value={formData.preferredTime}
                       onChange={(e) => setFormData({...formData, preferredTime: e.target.value})}
                       required
                       className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                     >
-                      <option value="">Select time</option>
+                      <option value="">{t('video.selectTime')}</option>
                       <option value="09:00 AM">09:00 AM</option>
                       <option value="10:00 AM">10:00 AM</option>
                       <option value="11:00 AM">11:00 AM</option>
@@ -257,22 +256,22 @@ function VideoConsultation() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Consultation Type</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('video.type')}</label>
                   <select 
                     value={formData.consultationType}
                     onChange={(e) => setFormData({...formData, consultationType: e.target.value})}
                     className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                   >
-                    <option value="Video Call">Video Call</option>
-                    <option value="Audio Call">Audio Call</option>
-                    <option value="Chat">Chat</option>
+                    <option value={t('video.typeVideo')}>{t('video.typeVideo')}</option>
+                    <option value={t('video.typeAudio')}>{t('video.typeAudio')}</option>
+                    <option value={t('video.typeChat')}>{t('video.typeChat')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">Describe Your Symptoms *</label>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('video.symptomsLabel')}</label>
                   <textarea 
                     rows="4" 
-                    placeholder="Please describe your symptoms and any relevant medical history..." 
+                    placeholder={t('video.symptomsPh')} 
                     value={formData.symptoms}
                     onChange={(e) => setFormData({...formData, symptoms: e.target.value})}
                     required
@@ -283,11 +282,9 @@ function VideoConsultation() {
                   <button 
                     type="button"
                     onClick={async () => {
-                      console.log('Testing camera access...')
                       const success = await initializeMedia()
                       if (success) {
-                        alert('Camera access successful! You can now start the consultation.')
-                        // Stop the test stream
+                        alert(t('video.testCamera'))
                         if (localStreamRef.current) {
                           localStreamRef.current.getTracks().forEach(track => track.stop())
                         }
@@ -295,11 +292,11 @@ function VideoConsultation() {
                     }}
                     className="px-4 py-2 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 text-sm"
                   >
-                    🧪 Test Camera
+                    🧪 {t('video.testCamera')}
                   </button>
                   <button type="submit" className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition text-sm sm:text-base">
                     <span>📞</span>
-                    <span>Book Consultation</span>
+                    <span>{t('video.bookBtn')}</span>
                   </button>
                 </div>
               </form>
@@ -309,7 +306,7 @@ function VideoConsultation() {
             <div className="space-y-4 sm:space-y-6">
               <div className="rounded-xl sm:rounded-2xl border border-zinc-200 shadow-sm p-4 sm:p-5">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-lg sm:text-xl mb-2 sm:mb-3">👨‍⚕️</div>
-                <div className="font-semibold mb-3 text-sm sm:text-base">Available Doctors</div>
+                <div className="font-semibold mb-3 text-sm sm:text-base">{t('video.availableDoctors')}</div>
                 <div className="space-y-3">
                   {availableDoctors.map((doctor) => (
                     <div 
@@ -328,7 +325,7 @@ function VideoConsultation() {
                           <div className="text-xs text-zinc-600">{doctor.specialty}</div>
                           <div className="flex items-center gap-2 mt-1">
                             <span className={`px-2 py-1 rounded-full text-xs ${
-                              doctor.status === 'Available' 
+                              doctor.status === t('video.doctors.d1.status') || doctor.status === t('video.doctors.d2.status') 
                                 ? 'bg-green-100 text-green-700' 
                                 : 'bg-yellow-100 text-yellow-700'
                             }`}>
@@ -345,11 +342,11 @@ function VideoConsultation() {
 
               <div className="rounded-xl sm:rounded-2xl border border-zinc-200 shadow-sm p-4 sm:p-5 bg-gradient-to-b from-green-50 to-white">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 text-green-600 grid place-items-center text-lg sm:text-xl mb-2 sm:mb-3">⏰</div>
-                <div className="font-semibold mb-2 text-sm sm:text-base">Available Hours</div>
+                <div className="font-semibold mb-2 text-sm sm:text-base">{t('video.availableHours')}</div>
                 <div className="text-xs sm:text-sm">
-                  <div className="flex justify-between py-1 border-b border-zinc-100"><span>Monday - Friday:</span><span className="font-medium">9:00 AM - 6:00 PM</span></div>
-                  <div className="flex justify-between py-1 border-b border-zinc-100"><span>Saturday:</span><span className="font-medium">9:00 AM - 2:00 PM</span></div>
-                  <div className="flex justify-between py-1"><span>Sunday:</span><span className="text-red-600 font-medium">Closed</span></div>
+                  <div className="flex justify-between py-1 border-b border-zinc-100"><span>{t('video.monFri')}</span><span className="font-medium">9:00 AM - 6:00 PM</span></div>
+                  <div className="flex justify-between py-1 border-b border-zinc-100"><span>{t('video.saturday')}</span><span className="font-medium">9:00 AM - 2:00 PM</span></div>
+                  <div className="flex justify-between py-1"><span>{t('video.sunday')}</span><span className="text-red-600 font-medium">{t('video.closed')}</span></div>
                 </div>
               </div>
             </div>
@@ -365,7 +362,7 @@ function VideoConsultation() {
                     {selectedDoctor?.name} - {selectedDoctor?.specialty}
                   </div>
                   <div className="text-xs text-zinc-600">
-                    {isCallConnected ? `Connected • ${formatDuration(callDuration)}` : 'Connecting...'}
+                    {isCallConnected ? `${t('video.connected')} • ${formatDuration(callDuration)}` : t('video.connecting')}
                   </div>
                 </div>
               </div>
@@ -401,7 +398,7 @@ function VideoConsultation() {
                     </div>
                     <div className="text-lg font-medium">{selectedDoctor?.name}</div>
                     <div className="text-sm text-zinc-400">{selectedDoctor?.specialty}</div>
-                    <div className="text-xs text-zinc-500 mt-2">Doctor is connected</div>
+                    <div className="text-xs text-zinc-500 mt-2">{t('video.doctorConnected')}</div>
                   </div>
                 ) : (
                   <div className="text-center text-white">
@@ -409,8 +406,8 @@ function VideoConsultation() {
                       {selectedDoctor?.avatar}
                     </div>
                     <div className="text-lg font-medium">{selectedDoctor?.name}</div>
-                    <div className="text-sm text-zinc-400">Connecting...</div>
-                    <div className="text-xs text-zinc-500 mt-2">Please wait while we connect you</div>
+                    <div className="text-sm text-zinc-400">{t('video.connecting')}</div>
+                    <div className="text-xs text-zinc-500 mt-2">{t('video.pleaseWait')}</div>
                   </div>
                 )}
               </div>
@@ -427,14 +424,14 @@ function VideoConsultation() {
                 />
                 {!isVideoOn && (
                   <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center text-white text-xs">
-                    Camera Off
+                    {t('video.cameraOff')}
                   </div>
                 )}
                 {!localStreamRef.current && (
                   <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center text-white text-xs">
                     <div className="text-center">
                       <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <div>Loading Camera...</div>
+                      <div>{t('video.loadingCamera')}</div>
                     </div>
                   </div>
                 )}

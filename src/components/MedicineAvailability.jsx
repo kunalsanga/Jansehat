@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 function MedicineAvailability() {
+    const { t } = useTranslation()
     const [query, setQuery] = useState('')
     const [category, setCategory] = useState('All Medicines')
     const [sortBy, setSortBy] = useState('name')
@@ -396,7 +398,7 @@ function MedicineAvailability() {
       {
         id: 23,
         name: 'Vitamin B12',
-        brand: 'Nature\'s Bounty',
+        brand: "Nature's Bounty",
         tags: ['Vitamins', 'Energy'],
         stock: 'In Stock',
         price: 20,
@@ -599,14 +601,14 @@ function MedicineAvailability() {
         {/* Header with Cart */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">Medicine Finder</h1>
-            <p className="text-xs sm:text-sm text-zinc-600">Find and order medicines from nearby pharmacies</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">{t('medicine.title')}</h1>
+            <p className="text-xs sm:text-sm text-zinc-600">{t('medicine.subtitle')}</p>
           </div>
           <button 
             onClick={() => setShowCart(!showCart)}
             className="relative px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm sm:text-base"
           >
-            🛒 Cart ({cart.length})
+            🛒 {t('medicine.cart')} ({cart.length})
             {cart.length > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {cart.reduce((sum, item) => sum + item.quantity, 0)}
@@ -625,7 +627,7 @@ function MedicineAvailability() {
                   <input 
                     value={query} 
                     onChange={(e)=>setQuery(e.target.value)} 
-                    placeholder="Search medicines, brands, pharmacies..." 
+                    placeholder={t('medicine.searchPh')} 
                     className="w-full outline-none text-sm sm:text-base" 
                   />
                 </div>
@@ -646,10 +648,10 @@ function MedicineAvailability() {
               onChange={(e)=>setSortBy(e.target.value)} 
               className="px-3 py-2 rounded-lg border border-zinc-300 text-sm sm:text-base"
             >
-              <option value="name">Sort by Name</option>
-              <option value="price">Sort by Price</option>
-              <option value="stock">Sort by Stock</option>
-              <option value="expiry">Sort by Expiry</option>
+              <option value="name">{t('medicine.sortByName')}</option>
+              <option value="price">{t('medicine.sortByPrice')}</option>
+              <option value="stock">{t('medicine.sortByStock')}</option>
+              <option value="expiry">{t('medicine.sortByExpiry')}</option>
             </select>
             
             <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-300 text-sm sm:text-base cursor-pointer">
@@ -659,7 +661,7 @@ function MedicineAvailability() {
                 onChange={(e)=>setShowPrescriptionOnly(e.target.checked)}
                 className="rounded"
               />
-              Prescription Only
+              {t('medicine.prescriptionOnly')}
             </label>
           </div>
         </div>
@@ -669,7 +671,7 @@ function MedicineAvailability() {
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
             <div className="w-full max-w-md bg-white h-full overflow-y-auto">
               <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Shopping Cart</h2>
+                <h2 className="text-lg font-semibold">{t('medicine.shoppingCart')}</h2>
                 <button 
                   onClick={() => setShowCart(false)}
                   className="text-zinc-500 hover:text-zinc-700"
@@ -680,7 +682,7 @@ function MedicineAvailability() {
               
               <div className="p-4 space-y-4">
                 {cart.length === 0 ? (
-                  <p className="text-zinc-500 text-center py-8">Your cart is empty</p>
+                  <p className="text-zinc-500 text-center py-8">{t('medicine.cartEmpty')}</p>
                 ) : (
                   <>
                     {cart.map((item) => (
@@ -712,18 +714,18 @@ function MedicineAvailability() {
                           onClick={() => removeFromCart(item.id)}
                           className="text-red-500 hover:text-red-700 text-sm"
                         >
-                          Remove
+                          {t('medicine.remove')}
                         </button>
                       </div>
                     ))}
                     
                     <div className="border-t border-zinc-200 pt-4">
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-lg font-semibold">Total:</span>
+                        <span className="text-lg font-semibold">{t('medicine.total')}</span>
                         <span className="text-lg font-semibold text-green-600">₹{getTotalPrice()}</span>
                       </div>
                       <button className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-medium">
-                        Proceed to Checkout
+                        {t('medicine.checkout')}
                       </button>
                     </div>
                   </>
@@ -747,26 +749,26 @@ function MedicineAvailability() {
                           <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Rx</span>
                         )}
                       </div>
-                      <div className="text-xs sm:text-sm text-zinc-500">Brand: {m.brand}</div>
+                      <div className="text-xs sm:text-sm text-zinc-500">{t('medicine.brand')} {m.brand}</div>
                       <div className="text-xs sm:text-sm text-zinc-600 mt-1">{m.description}</div>
                     </div>
                   </div>
                   <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1 sm:gap-2">
-                    {m.tags.map((t)=> <span key={t} className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">{t}</span>)}
+                    {m.tags.map((tTag)=> <span key={tTag} className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">{tTag}</span>)}
                     <StockBadge stock={m.stock} />
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <div className="text-right">
                     <div className="text-lg sm:text-xl font-semibold text-green-600">₹{m.price}</div>
-                    <div className="text-xs text-zinc-500">per unit</div>
+                    <div className="text-xs text-zinc-500">{t('medicine.perUnit')}</div>
                   </div>
                   <button 
                     onClick={() => addToCart(m)}
                     disabled={m.stock === 'Out of Stock'}
                     className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:bg-zinc-300 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
-                    {m.stock === 'Out of Stock' ? 'Out of Stock' : 'Add to Cart'}
+                    {m.stock === 'Out of Stock' ? t('medicine.outOfStock') : t('medicine.addToCart')}
                   </button>
                 </div>
               </div>
@@ -777,22 +779,22 @@ function MedicineAvailability() {
                   <span className="truncate">{m.pharmacy}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">Dosage:</span>
+                  <span className="font-medium">{t('medicine.dosage')}</span>
                   <span className="truncate">{m.dosage}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">Expires:</span>
+                  <span className="font-medium">{t('medicine.expires')}</span>
                   <span>{m.expires}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">Side Effects:</span>
+                  <span className="font-medium">{t('medicine.sideEffects')}</span>
                   <span className="truncate">{m.sideEffects}</span>
                 </div>
               </div>
 
               <div className="mt-3 sm:mt-4 p-3 bg-zinc-50 rounded-lg">
                 <div className="text-xs sm:text-sm">
-                  <div className="font-medium mb-1">Drug Interactions:</div>
+                  <div className="font-medium mb-1">{t('medicine.interactionsTitle')}</div>
                   <div className="text-zinc-600">{m.interactions}</div>
                 </div>
               </div>
@@ -802,8 +804,8 @@ function MedicineAvailability() {
           {filtered.length === 0 && (
             <div className="text-center text-xs sm:text-sm text-zinc-500 py-8">
               <div className="text-4xl mb-2">🔍</div>
-              <div>No medicines found matching your criteria.</div>
-              <div className="mt-1">Try adjusting your search or filters.</div>
+              <div>{t('medicine.noneFoundTitle')}</div>
+              <div className="mt-1">{t('medicine.noneFoundTip')}</div>
             </div>
           )}
         </div>
