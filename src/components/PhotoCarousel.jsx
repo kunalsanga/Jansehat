@@ -19,7 +19,8 @@ function PhotoCarousel() {
     "/images/custom/Gemini_Generated_Image_k3z4i4k3z4i4k3z4.png",
     "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc.png",
     "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc (1).png",
-    "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc (2).png"
+    "/images/custom/Gemini_Generated_Image_pkqcqypkqcqypkqc (2).png",
+    "/images/custom/Gemini_Generated_Image_4wytht4wytht4wyt (2).png"
   ];
 
   const handleImageLoad = (src) => {
