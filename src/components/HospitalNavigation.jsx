@@ -1,10 +1,23 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+
+const NABHA_COORDS = { lat: 30.3747, lng: 76.1524 } // Nabha, Punjab
+
+function RecenterOnNabha() {
+    const map = useMap()
+    useEffect(() => {
+        map.setView([NABHA_COORDS.lat, NABHA_COORDS.lng], 13)
+    }, [map])
+    return null
+}
 
 function HospitalNavigation() {
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedType, setSelectedType] = useState('all')
     const [userLocation, setUserLocation] = useState('')
+    const [currentPosition, setCurrentPosition] = useState(null)
 
     const medicalFacilities = [
         {
@@ -140,9 +153,23 @@ function HospitalNavigation() {
     }
 
     const handleNavigation = (facility) => {
-        // In a real app, this would open Google Maps or Apple Maps
-        alert(`Opening navigation to ${facility.name}...`)
+        const destination = `${facility.coordinates.lat},${facility.coordinates.lng}`
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank')
     }
+
+    useEffect(() => {
+        if (!navigator.geolocation) return
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+                setCurrentPosition(coords)
+            },
+            () => {
+                setCurrentPosition(null)
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+        )
+    }, [])
 
     const handleCall = (facility) => {
         alert(`Calling ${facility.name} at ${facility.phone}`)
@@ -252,15 +279,32 @@ function HospitalNavigation() {
                 ))}
             </div>
 
-            {/* Map View Button */}
-            <div className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
-                <div className="text-center">
-                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">🗺️</div>
-                    <h3 className="font-semibold mb-2">View on Map</h3>
-                    <p className="text-sm text-zinc-600 mb-4">See all medical facilities on an interactive map</p>
-                    <button className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
-                        Open Map View
-                    </button>
+            {/* Map View */}
+            <div className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-2 sm:p-4">
+                <div className="h-80 rounded-lg overflow-hidden">
+                    <MapContainer center={[NABHA_COORDS.lat, NABHA_COORDS.lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <RecenterOnNabha />
+                        {currentPosition && (
+                            <Marker position={[currentPosition.lat, currentPosition.lng]}>
+                                <Popup>Your location</Popup>
+                            </Marker>
+                        )}
+                        {filteredFacilities.map((f) => (
+                            <Marker key={f.id} position={[f.coordinates.lat, f.coordinates.lng]}>
+                                <Popup>
+                                    <div className="space-y-1">
+                                        <div className="font-semibold">{f.name}</div>
+                                        <div className="text-xs text-zinc-600">{f.address}</div>
+                                        <button onClick={() => handleNavigation(f)} className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs">Navigate</button>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))}
+                    </MapContainer>
                 </div>
             </div>
         </div>
