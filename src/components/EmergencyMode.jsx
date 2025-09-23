@@ -1,12 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Skeleton from './Skeleton'
 
 function EmergencyMode() {
     const { t } = useTranslation()
     const [emergencyType, setEmergencyType] = useState('')
     const [location, setLocation] = useState('')
     const [isCalling, setIsCalling] = useState(false)
+    const [isHospitalsLoading, setIsHospitalsLoading] = useState(true)
+
+    useEffect(()=>{
+      const id = setTimeout(()=> setIsHospitalsLoading(false), 400)
+      return ()=> clearTimeout(id)
+    }, [])
 
     const emergencyServices = [
         {
@@ -161,7 +168,22 @@ function EmergencyMode() {
                     <p className="text-sm text-zinc-600">{t('emergency.nearbyHospitalsSubtitle')}</p>
                 </div>
                 <div className="p-4 sm:p-5 space-y-3">
-                    {nearbyHospitals.map((hospital) => (
+                    {isHospitalsLoading ? (
+                      [...Array(3)].map((_,i)=> (
+                        <div key={i} className="p-3 rounded-lg border border-zinc-200">
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="w-10 h-10 rounded-full" />
+                            <div className="flex-1 space-y-2">
+                              <Skeleton className="h-4 w-1/3" />
+                              <Skeleton className="h-3 w-2/3" />
+                              <Skeleton className="h-3 w-1/4" />
+                            </div>
+                            <Skeleton className="w-20 h-8 rounded-md" />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      nearbyHospitals.map((hospital) => (
                         <div key={hospital.id} className="flex items-center justify-between p-3 rounded-lg border border-zinc-200 hover:bg-zinc-50">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
@@ -188,7 +210,8 @@ function EmergencyMode() {
                                 {t('emergency.callNow')}
                             </button>
                         </div>
-                    ))}
+                      ))
+                    )}
                 </div>
             </div>
 

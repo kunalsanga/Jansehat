@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import Skeleton from './Skeleton'
 
 function MedicineAvailability() {
     const { t } = useTranslation()
@@ -9,6 +10,12 @@ function MedicineAvailability() {
     const [showPrescriptionOnly, setShowPrescriptionOnly] = useState(false)
     const [cart, setCart] = useState([])
     const [showCart, setShowCart] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+  
+    useEffect(() => {
+      const id = setTimeout(()=> setIsLoading(false), 400)
+      return () => clearTimeout(id)
+    }, [])
   
     const categories = [
       'All Medicines',
@@ -666,6 +673,28 @@ function MedicineAvailability() {
           </div>
         </div>
 
+        {/* Loading skeletons */}
+        {isLoading && (
+          <div className="space-y-4 sm:space-y-5">
+            {[...Array(6)].map((_,i)=> (
+              <div key={i} className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-zinc-200">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-2/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <div className="w-24 space-y-2">
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Cart Sidebar */}
         {showCart && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
@@ -735,80 +764,82 @@ function MedicineAvailability() {
           </div>
         )}
   
-        <div className="space-y-4 sm:space-y-5">
-          {filtered.map((m)=> (
-            <div key={m.id} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-orange-100 text-orange-600 grid place-items-center text-sm sm:text-base flex-shrink-0">💊</div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="text-lg sm:text-xl font-semibold truncate">{m.name}</div>
-                        {m.prescriptionRequired && (
-                          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Rx</span>
-                        )}
+        {!isLoading && (
+          <div className="space-y-4 sm:space-y-5">
+            {filtered.map((m)=> (
+              <div key={m.id} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-orange-100 text-orange-600 grid place-items-center text-sm sm:text-base flex-shrink-0">💊</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="text-lg sm:text-xl font-semibold truncate">{m.name}</div>
+                          {m.prescriptionRequired && (
+                            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Rx</span>
+                          )}
+                        </div>
+                        <div className="text-xs sm:text-sm text-zinc-500">{t('medicine.brand')} {m.brand}</div>
+                        <div className="text-xs sm:text-sm text-zinc-600 mt-1">{m.description}</div>
                       </div>
-                      <div className="text-xs sm:text-sm text-zinc-500">{t('medicine.brand')} {m.brand}</div>
-                      <div className="text-xs sm:text-sm text-zinc-600 mt-1">{m.description}</div>
+                    </div>
+                    <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1 sm:gap-2">
+                      {m.tags.map((tTag)=> <span key={tTag} className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">{tTag}</span>)}
+                      <StockBadge stock={m.stock} />
                     </div>
                   </div>
-                  <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1 sm:gap-2">
-                    {m.tags.map((tTag)=> <span key={tTag} className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">{tTag}</span>)}
-                    <StockBadge stock={m.stock} />
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="text-right">
+                      <div className="text-lg sm:text-xl font-semibold text-green-600">₹{m.price}</div>
+                      <div className="text-xs text-zinc-500">{t('medicine.perUnit')}</div>
+                    </div>
+                    <button 
+                      onClick={() => addToCart(m)}
+                      disabled={m.stock === 'Out of Stock'}
+                      className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:bg-zinc-300 disabled:cursor-not-allowed text-sm sm:text-base"
+                    >
+                      {m.stock === 'Out of Stock' ? t('medicine.outOfStock') : t('medicine.addToCart')}
+                    </button>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-right">
-                    <div className="text-lg sm:text-xl font-semibold text-green-600">₹{m.price}</div>
-                    <div className="text-xs text-zinc-500">{t('medicine.perUnit')}</div>
-                  </div>
-                  <button 
-                    onClick={() => addToCart(m)}
-                    disabled={m.stock === 'Out of Stock'}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:bg-zinc-300 disabled:cursor-not-allowed text-sm sm:text-base"
-                  >
-                    {m.stock === 'Out of Stock' ? t('medicine.outOfStock') : t('medicine.addToCart')}
-                  </button>
-                </div>
-              </div>
   
-              <div className="mt-3 sm:mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm">
-                <div className="flex items-center gap-2">
-                  <span>📍</span>
-                  <span className="truncate">{m.pharmacy}</span>
+                <div className="mt-3 sm:mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>📍</span>
+                    <span className="truncate">{m.pharmacy}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{t('medicine.dosage')}</span>
+                    <span className="truncate">{m.dosage}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{t('medicine.expires')}</span>
+                    <span>{m.expires}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{t('medicine.sideEffects')}</span>
+                    <span className="truncate">{m.sideEffects}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{t('medicine.dosage')}</span>
-                  <span className="truncate">{m.dosage}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{t('medicine.expires')}</span>
-                  <span>{m.expires}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{t('medicine.sideEffects')}</span>
-                  <span className="truncate">{m.sideEffects}</span>
-                </div>
-              </div>
 
-              <div className="mt-3 sm:mt-4 p-3 bg-zinc-50 rounded-lg">
-                <div className="text-xs sm:text-sm">
-                  <div className="font-medium mb-1">{t('medicine.interactionsTitle')}</div>
-                  <div className="text-zinc-600">{m.interactions}</div>
+                <div className="mt-3 sm:mt-4 p-3 bg-zinc-50 rounded-lg">
+                  <div className="text-xs sm:text-sm">
+                    <div className="font-medium mb-1">{t('medicine.interactionsTitle')}</div>
+                    <div className="text-zinc-600">{m.interactions}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
   
-          {filtered.length === 0 && (
-            <div className="text-center text-xs sm:text-sm text-zinc-500 py-8">
-              <div className="text-4xl mb-2">🔍</div>
-              <div>{t('medicine.noneFoundTitle')}</div>
-              <div className="mt-1">{t('medicine.noneFoundTip')}</div>
-            </div>
-          )}
-        </div>
+            {filtered.length === 0 && (
+              <div className="text-center text-xs sm:text-sm text-zinc-500 py-8">
+                <div className="text-4xl mb-2">🔍</div>
+                <div>{t('medicine.noneFoundTitle')}</div>
+                <div className="mt-1">{t('medicine.noneFoundTip')}</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     )
   }

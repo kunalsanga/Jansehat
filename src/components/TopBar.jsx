@@ -11,6 +11,10 @@ function TopBar() {
             src="/jansehat-favicon.svg" 
             alt="JanSehat Logo" 
             className="w-6 h-6 sm:w-7 sm:h-7"
+            loading="eager"
+            decoding="async"
+            width="28"
+            height="28"
           />
           <div className="text-base sm:text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             {t('appName')}

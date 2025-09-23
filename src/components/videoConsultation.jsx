@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Skeleton from './Skeleton'
 
 function VideoConsultation() {
     const { t } = useTranslation()
@@ -9,6 +10,7 @@ function VideoConsultation() {
     const [isMuted, setIsMuted] = useState(false)
     const [isVideoOn, setIsVideoOn] = useState(true)
     const [callDuration, setCallDuration] = useState(0)
+    const [isDoctorsLoading, setIsDoctorsLoading] = useState(true)
     const [formData, setFormData] = useState({
         patientName: '',
         phoneNumber: '',
@@ -22,6 +24,11 @@ function VideoConsultation() {
     const remoteVideoRef = useRef(null)
     const localStreamRef = useRef(null)
     const callTimerRef = useRef(null)
+
+    useEffect(()=>{
+      const id = setTimeout(()=> setIsDoctorsLoading(false), 400)
+      return ()=> clearTimeout(id)
+    }, [])
 
     // Localized doctors data
     const availableDoctors = [
@@ -308,35 +315,49 @@ function VideoConsultation() {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-lg sm:text-xl mb-2 sm:mb-3">👨‍⚕️</div>
                 <div className="font-semibold mb-3 text-sm sm:text-base">{t('video.availableDoctors')}</div>
                 <div className="space-y-3">
-                  {availableDoctors.map((doctor) => (
-                    <div 
-                      key={doctor.id}
-                      onClick={() => setSelectedDoctor(doctor)}
-                      className={`p-3 rounded-lg border cursor-pointer transition ${
-                        selectedDoctor?.id === doctor.id 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-zinc-200 hover:border-zinc-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{doctor.avatar}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm">{doctor.name}</div>
-                          <div className="text-xs text-zinc-600">{doctor.specialty}</div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              doctor.status === t('video.doctors.d1.status') || doctor.status === t('video.doctors.d2.status') 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                              {doctor.status}
-                            </span>
-                            <span className="text-xs text-zinc-500">⭐ {doctor.rating}</span>
+                  {isDoctorsLoading ? (
+                    [...Array(3)].map((_,i)=> (
+                      <div key={i} className="p-3 rounded-lg border border-zinc-200">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-8 h-8 rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-3 w-1/3" />
+                            <Skeleton className="h-3 w-1/4" />
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    availableDoctors.map((doctor) => (
+                      <div 
+                        key={doctor.id}
+                        onClick={() => setSelectedDoctor(doctor)}
+                        className={`p-3 rounded-lg border cursor-pointer transition ${
+                          selectedDoctor?.id === doctor.id 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-zinc-200 hover:border-zinc-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">{doctor.avatar}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm">{doctor.name}</div>
+                            <div className="text-xs text-zinc-600">{doctor.specialty}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                doctor.status === t('video.doctors.d1.status') || doctor.status === t('video.doctors.d2.status') 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : 'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {doctor.status}
+                              </span>
+                              <span className="text-xs text-zinc-500">⭐ {doctor.rating}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

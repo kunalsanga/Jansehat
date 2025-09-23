@@ -17,6 +17,8 @@ function ServiceCard({ imgSrc, icon, title, description, to }) {
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           loading="lazy"
+          decoding="async"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onLoad={() => setImageLoaded(true)}
           onError={() => setImageError(true)}
         />
