@@ -1,34 +1,18 @@
 import React, { useState } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 
 function HealthRecords() {
-    const { t } = useTranslation()
     const [tab, setTab] = useState('profile')
     const [editingProfile, setEditingProfile] = useState(false)
-    const [profileData, setProfileData] = useState({
-        fullName: 'Dr. Sarah Johnson',
-        age: 34,
-        phone: '+1 (555) 123-4567',
-        gender: 'Female',
-        emergencyContact: '+1 (555) 987-6543',
-        bloodType: 'O+',
-        height: '5\'6"',
-        weight: '140 lbs',
-        allergies: 'Penicillin, Shellfish, Latex',
-        currentMedications: 'Metformin 500mg daily, Lisinopril 10mg daily',
-        pastSurgeries: 'Appendectomy (2018), Gallbladder removal (2020)',
-        chronicConditions: 'Type 2 Diabetes, Hypertension',
-        insuranceProvider: 'Blue Cross Blue Shield',
-        policyNumber: 'BC123456789'
-    })
+    
+  
 
     // Comprehensive dummy data
     const medicalHistory = [
         {
             id: 1,
             date: '2024-01-15',
-            doctor: 'Dr. Michael Chen',
+            doctor: 'Dr. Prakash Padhi',
             specialty: 'Cardiology',
             diagnosis: 'Hypertension',
             treatment: 'Prescribed Lisinopril 10mg daily',
@@ -38,7 +22,7 @@ function HealthRecords() {
         {
             id: 2,
             date: '2023-12-03',
-            doctor: 'Dr. Emily Rodriguez',
+            doctor: 'Dr. Rajesh Singh',
             specialty: 'Endocrinology',
             diagnosis: 'Type 2 Diabetes',
             treatment: 'Metformin 500mg twice daily, dietary counseling',
@@ -48,7 +32,7 @@ function HealthRecords() {
         {
             id: 3,
             date: '2023-10-22',
-            doctor: 'Dr. James Wilson',
+            doctor: 'Dr. Rashmi Naik',
             specialty: 'General Surgery',
             diagnosis: 'Gallbladder stones',
             treatment: 'Laparoscopic cholecystectomy',
@@ -58,7 +42,7 @@ function HealthRecords() {
         {
             id: 4,
             date: '2023-08-14',
-            doctor: 'Dr. Lisa Park',
+            doctor: 'Dr. Sagarika Pradhan',
             specialty: 'Dermatology',
             diagnosis: 'Mild eczema',
             treatment: 'Topical hydrocortisone cream',
@@ -79,7 +63,7 @@ function HealthRecords() {
                 'Hematocrit': '39.8%'
             },
             status: 'Normal',
-            lab: 'Quest Diagnostics'
+            
         },
         {
             id: 2,
@@ -92,7 +76,7 @@ function HealthRecords() {
                 'Triglycerides': '120 mg/dL'
             },
             status: 'Normal',
-            lab: 'Quest Diagnostics'
+            
         },
         {
             id: 3,
@@ -102,7 +86,7 @@ function HealthRecords() {
                 'HbA1c': '7.1%'
             },
             status: 'Good Control',
-            lab: 'LabCorp'
+            
         },
         {
             id: 4,
@@ -114,7 +98,7 @@ function HealthRecords() {
                 'Free T3': '3.1 pg/mL'
             },
             status: 'Normal',
-            lab: 'Quest Diagnostics'
+           
         }
     ]
 
@@ -124,7 +108,7 @@ function HealthRecords() {
             medication: 'Metformin',
             dosage: '500mg',
             frequency: 'Twice daily with meals',
-            prescribedBy: 'Dr. Emily Rodriguez',
+            prescribedBy: 'Dr. Sooraj Raj',
             prescribedDate: '2023-12-03',
             refills: 3,
             status: 'Active',
@@ -135,7 +119,7 @@ function HealthRecords() {
             medication: 'Lisinopril',
             dosage: '10mg',
             frequency: 'Once daily',
-            prescribedBy: 'Dr. Michael Chen',
+            prescribedBy: 'Dr. Srishti Kumari',
             prescribedDate: '2024-01-15',
             refills: 2,
             status: 'Active',
@@ -146,7 +130,7 @@ function HealthRecords() {
             medication: 'Atorvastatin',
             dosage: '20mg',
             frequency: 'Once daily at bedtime',
-            prescribedBy: 'Dr. Michael Chen',
+            prescribedBy: 'Dr. Asmita Soni',
             prescribedDate: '2024-01-15',
             refills: 2,
             status: 'Active',
@@ -157,7 +141,7 @@ function HealthRecords() {
             medication: 'Hydrocortisone Cream',
             dosage: '1%',
             frequency: 'Apply to affected area twice daily',
-            prescribedBy: 'Dr. Lisa Park',
+            prescribedBy: 'Dr. Sameer Behra',
             prescribedDate: '2023-08-14',
             refills: 0,
             status: 'Completed',
@@ -172,7 +156,7 @@ function HealthRecords() {
             date: '2023-11-15',
             nextDue: '2024-11-15',
             status: 'Up to date',
-            administeredBy: 'Dr. Sarah Johnson'
+            administeredBy: 'Dr. Saurav Mishra'
         },
         {
             id: 2,
@@ -188,7 +172,7 @@ function HealthRecords() {
             date: '2022-05-20',
             nextDue: '2027-05-20',
             status: 'Up to date',
-            administeredBy: 'Dr. James Wilson'
+            administeredBy: 'Dr. Ram Singh'
         },
         {
             id: 4,
@@ -205,7 +189,7 @@ function HealthRecords() {
             id: 1,
             date: '2024-02-15',
             time: '10:00 AM',
-            doctor: 'Dr. Emily Rodriguez',
+            doctor: 'Dr. Mahesh Kumar',
             specialty: 'Endocrinology',
             type: 'Follow-up',
             location: 'Medical Center - Suite 200'
@@ -214,314 +198,129 @@ function HealthRecords() {
             id: 2,
             date: '2024-02-28',
             time: '2:30 PM',
-            doctor: 'Dr. Michael Chen',
+            doctor: 'Dr. Sneha Kumari',
             specialty: 'Cardiology',
             type: 'Annual Checkup',
             location: 'Heart Institute - Floor 3'
         }
     ]
 
-    return (
+    // Combine all records for unified tab
+  const allRecords = [
+    ...medicalHistory.map(r => ({ ...r, type: 'Medical History', sortDate: new Date(r.date) })),
+    ...labResults.map(r => ({ ...r, type: 'Lab Result', sortDate: new Date(r.date) })),
+    ...prescriptions.map(r => ({ ...r, type: 'Prescription', sortDate: new Date(r.prescribedDate) })),
+    ...vaccinations.map(r => ({ ...r, type: 'Vaccination', sortDate: new Date(r.date) })),
+    ...upcomingAppointments.map(r => ({ ...r, type: 'Appointment', sortDate: new Date(r.date) }))
+  ].sort((a, b) => b.sortDate - a.sortDate); // latest first
+
+  return (
+    <div className="min-h-screen overflow-y-auto p-4 space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <NavLink to="/" className="shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50 text-sm sm:text-base">←</NavLink>
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">Health Records</h1>
+          <p className="text-xs sm:text-sm text-zinc-600">Manage your medical information securely</p>
+        </div>
+      </div>
+  
+      {/* Unified Scrollable Records */}
       <div className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <NavLink to="/" className="shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50 text-sm sm:text-base">←</NavLink>
-          <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">{t('records.title')}</h1>
-            <p className="text-xs sm:text-sm text-zinc-600">{t('records.subtitle')}</p>
-          </div>
-        </div>
+        {allRecords.map(record => {
+          let bgColor = '';
+          switch(record.type) {
+            case 'Medical History':
+              bgColor = 'bg-yellow-50 border-yellow-300';
+              break;
+            case 'Lab Result':
+              bgColor = 'bg-blue-50 border-blue-300';
+              break;
+            case 'Prescription':
+              bgColor = 'bg-green-50 border-green-300';
+              break;
+            case 'Vaccination':
+              bgColor = 'bg-purple-50 border-purple-300';
+              break;
+            case 'Appointment':
+              bgColor = 'bg-pink-50 border-pink-300';
+              break;
+            default:
+              bgColor = 'bg-white border-zinc-200';
+          }
   
-        {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto">
-          <button onClick={() => setTab('profile')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='profile' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">👤</span>{t('records.tabs.profile')}
-          </button>
-          <button onClick={() => setTab('history')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='history' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">🩺</span>{t('records.tabs.history')}
-          </button>
-          <button onClick={() => setTab('lab')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='lab' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">🧪</span>{t('records.tabs.lab')}
-          </button>
-          <button onClick={() => setTab('prescriptions')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='prescriptions' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">💊</span>{t('records.tabs.prescriptions')}
-          </button>
-          <button onClick={() => setTab('vaccines')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='vaccines' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">💉</span>{t('records.tabs.vaccines')}
-          </button>
-          <button onClick={() => setTab('appointments')} className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl border whitespace-nowrap text-sm sm:text-base ${tab==='appointments' ? 'bg-white border-zinc-300 shadow-sm' : 'border-zinc-200 hover:bg-zinc-50'}`}>
-            <span className="mr-1 sm:mr-2">📅</span>{t('records.tabs.appointments')}
-          </button>
-        </div>
-  
-        {/* Profile Tab */}
-        {tab === 'profile' && (
-          <div className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm">
-            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-200 flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-100 text-purple-600 grid place-items-center text-sm sm:text-base">👤</div>
-                <div className="font-semibold text-sm sm:text-base">{t('records.patientProfile')}</div>
+          return (
+            <div key={`${record.type}-${record.id}`} className={`rounded-xl sm:rounded-2xl ${bgColor} border shadow-sm p-4 sm:p-5`}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="font-semibold text-sm sm:text-base">{record.type}: {record.diagnosis || record.testName || record.medication || record.vaccine || record.type}</h3>
+                  <p className="text-xs sm:text-sm text-zinc-600">
+                    {record.doctor || record.lab || record.administeredBy || record.prescribedBy || ''}
+                    {record.specialty ? ` • ${record.specialty}` : ''}
+                  </p>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs text-white ${
+                  record.type === 'Medical History' ? 'bg-yellow-500' :
+                  record.type === 'Lab Result' ? 'bg-blue-500' :
+                  record.type === 'Prescription' ? 'bg-green-500' :
+                  record.type === 'Vaccination' ? 'bg-purple-500' :
+                  record.type === 'Appointment' ? 'bg-pink-500' : 'bg-gray-500'
+                }`}>
+                  {record.type}
+                </span>
               </div>
-              <button 
-                onClick={() => setEditingProfile(!editingProfile)}
-                className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-zinc-300 hover:bg-zinc-50 text-xs sm:text-sm"
-              >
-                {editingProfile ? t('records.save') : t('records.editProfile')}
-              </button>
-            </div>
-            <div className="p-4 sm:p-5 space-y-4 sm:space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.fullName')}</label>
-                  <input 
-                    type="text" 
-                    value={profileData.fullName}
-                    onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.age')}</label>
-                  <input 
-                    type="number" 
-                    value={profileData.age}
-                    onChange={(e) => setProfileData({...profileData, age: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.phoneNumber')}</label>
-                  <input 
-                    type="tel" 
-                    value={profileData.phone}
-                    onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.gender')}</label>
-                  <select 
-                    value={profileData.gender}
-                    onChange={(e) => setProfileData({...profileData, gender: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50"
-                  >
-                    <option>{t('records.male')}</option>
-                    <option>{t('records.female')}</option>
-                    <option>{t('records.other')}</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.bloodType')}</label>
-                  <input 
-                    type="text" 
-                    value={profileData.bloodType}
-                    onChange={(e) => setProfileData({...profileData, bloodType: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.height')}</label>
-                  <input 
-                    type="text" 
-                    value={profileData.height}
-                    onChange={(e) => setProfileData({...profileData, height: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.emergencyContact')}</label>
-                <input 
-                  type="tel" 
-                  value={profileData.emergencyContact}
-                  onChange={(e) => setProfileData({...profileData, emergencyContact: e.target.value})}
-                  disabled={!editingProfile}
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.insuranceProvider')}</label>
-                  <input 
-                    type="text" 
-                    value={profileData.insuranceProvider}
-                    onChange={(e) => setProfileData({...profileData, insuranceProvider: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">{t('records.policyNumber')}</label>
-                  <input 
-                    type="text" 
-                    value={profileData.policyNumber}
-                    onChange={(e) => setProfileData({...profileData, policyNumber: e.target.value})}
-                    disabled={!editingProfile}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base disabled:bg-zinc-50" 
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Medical History Tab */}
-        {tab === 'history' && (
-          <div className="space-y-4">
-            {medicalHistory.map((record) => (
-              <div key={record.id} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base">{record.diagnosis}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-600">{record.doctor} • {record.specialty}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    record.status === 'Ongoing' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
-                  }`}>
-                    {record.status}
-                  </span>
-                </div>
-                <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">{t('records.date')}</span> {record.date}</div>
-                  <div><span className="font-medium">{t('records.treatment')}</span> {record.treatment}</div>
-                  <div><span className="font-medium">{t('records.notes')}</span> {record.notes}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Lab Results Tab */}
-        {tab === 'lab' && (
-          <div className="space-y-4">
-            {labResults.map((lab) => (
-              <div key={lab.id} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base">{lab.testName}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-600">{lab.lab} • {lab.date}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    lab.status === 'Normal' ? 'bg-green-100 text-green-700' : 
-                    lab.status === 'Good Control' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                    {lab.status}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {Object.entries(lab.results).map(([key, value]) => (
-                    <div key={key} className="flex justify-between text-xs sm:text-sm">
-                      <span className="font-medium">{key}:</span>
-                      <span>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Prescriptions Tab */}
-        {tab === 'prescriptions' && (
-          <div className="space-y-4">
-            {prescriptions.map((prescription) => (
-              <div key={prescription.id} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base">{prescription.medication}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-600">{prescription.dosage} • {prescription.frequency}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    prescription.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {prescription.status}
-                  </span>
-                </div>
-                <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">{t('records.prescribedBy')}</span> {prescription.prescribedBy}</div>
-                  <div><span className="font-medium">{t('records.date')}</span> {prescription.prescribedDate}</div>
-                  <div><span className="font-medium">{t('records.pharmacy')}</span> {prescription.pharmacy}</div>
-                  <div><span className="font-medium">{t('records.refillsRemaining')}</span> {prescription.refills}</div>
-                </div>
-                {prescription.status === 'Active' && (
-                  <button className="mt-3 px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600">
-                    {t('records.requestRefill')}
-                  </button>
+              {/* Record Details */}
+              <div className="space-y-1 text-xs sm:text-sm">
+                {record.type === 'Medical History' && (
+                  <>
+                    <div><span className="font-medium">Date:</span> {record.date}</div>
+                    <div><span className="font-medium">Treatment:</span> {record.treatment}</div>
+                    <div><span className="font-medium">Notes:</span> {record.notes}</div>
+                  </>
+                )}
+                {record.type === 'Lab Result' && (
+                  <>
+                    <div><span className="font-medium">Date:</span> {record.date}</div>
+                    {Object.entries(record.results).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="font-medium">{key}:</span>
+                        <span>{value}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {record.type === 'Prescription' && (
+                  <>
+                    <div><span className="font-medium">Dosage:</span> {record.dosage}</div>
+                    <div><span className="font-medium">Frequency:</span> {record.frequency}</div>
+                    <div><span className="font-medium">Prescribed by:</span> {record.prescribedBy}</div>
+                    <div><span className="font-medium">Refills remaining:</span> {record.refills}</div>
+                  </>
+                )}
+                {record.type === 'Vaccination' && (
+                  <>
+                    <div><span className="font-medium">Date administered:</span> {record.date}</div>
+                    <div><span className="font-medium">Next due:</span> {record.nextDue}</div>
+                  </>
+                )}
+                {record.type === 'Appointment' && (
+                  <>
+                    <div><span className="font-medium">Date:</span> {record.date}</div>
+                    <div><span className="font-medium">Time:</span> {record.time}</div>
+                    <div><span className="font-medium">Location:</span> {record.location}</div>
+                  </>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Vaccinations Tab */}
-        {tab === 'vaccines' && (
-          <div className="space-y-4">
-            {vaccinations.map((vaccine) => (
-              <div key={vaccine.id} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base">{vaccine.vaccine}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-600">{t('records.administeredBy')} {vaccine.administeredBy}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    vaccine.status === 'Up to date' ? 'bg-green-100 text-green-700' : 
-                    vaccine.status === 'Complete' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {vaccine.status}
-                  </span>
-                </div>
-                <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">{t('records.dateAdministered')}</span> {vaccine.date}</div>
-                  <div><span className="font-medium">{t('records.nextDue')}</span> {vaccine.nextDue}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Appointments Tab */}
-        {tab === 'appointments' && (
-          <div className="space-y-4">
-            {upcomingAppointments.map((appointment) => (
-              <div key={appointment.id} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 sm:p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base">{appointment.type}</h3>
-                    <p className="text-xs sm:text-sm text-zinc-600">{appointment.doctor} • {appointment.specialty}</p>
-                  </div>
-                  <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
-                    {t('records.upcoming')}
-                  </span>
-                </div>
-                <div className="space-y-2 text-xs sm:text-sm">
-                  <div><span className="font-medium">{t('records.date')}</span> {appointment.date}</div>
-                  <div><span className="font-medium">{t('records.time') || 'Time:'}</span> {appointment.time}</div>
-                  <div><span className="font-medium">{t('records.location')}</span> {appointment.location}</div>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600">
-                    {t('records.reschedule')}
-                  </button>
-                  <button className="px-3 py-1.5 border border-zinc-300 text-zinc-700 rounded-lg text-xs hover:bg-zinc-50">
-                    {t('records.cancel')}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )
+        })}
       </div>
-    )
+    
+  </div>
+)
+
+  
   }
   
 

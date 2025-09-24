@@ -87,6 +87,70 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
       throw new Error('Failed to analyze symptoms. Please try again later.');
     }
   }
+
+  async interpretVoiceCommand(transcript, options = {}) {
+    if (!this.isConfigured) {
+      return { action: 'UNKNOWN', confidence: 0, reason: 'AI not configured' };
+    }
+
+    if (!transcript || typeof transcript !== 'string') {
+      return { action: 'UNKNOWN', confidence: 0, reason: 'Empty transcript' };
+    }
+
+    try {
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const locale = options.locale || 'auto';
+      const nowPathHints = ['/records','/symptoms','/video','/emergency','/medicine','/navigation'];
+
+      const prompt = `
+You are an intent classification engine for a healthcare web app. Your task is to read the user's spoken command and output a STRICT JSON object describing the app action.
+
+Rules:
+- The user may speak in ANY language. Detect the language and interpret intent.
+- Map the command to one of these actions exactly:
+  OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION, UNKNOWN
+- Include optional parameters when relevant (e.g., destination for navigation, medicine name, etc.).
+- Return ONLY JSON. No markdown, no explanation.
+
+JSON schema:
+{
+  "action": "OPEN_HEALTH_RECORDS | OPEN_EMERGENCY | OPEN_SYMPTOM_CHECKER | OPEN_VIDEO_CONSULTATION | OPEN_MEDICINE | OPEN_NAVIGATION | UNKNOWN",
+  "confidence": 0.0, // 0-1
+  "parameters": { "medicine": string | undefined, "destination": string | undefined },
+  "detectedLanguage": string,
+  "responseText": string // Response in the same language as user input
+}
+
+Context:
+- Available routes: ${nowPathHints.join(', ')}
+- User locale preference: ${locale}
+
+User said: "${transcript}"
+`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (e) {
+        // Try to salvage JSON if the model added code fences accidentally
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      }
+
+      if (!parsed || !parsed.action) {
+        return { action: 'UNKNOWN', confidence: 0, reason: 'Unparseable response', raw: text };
+      }
+
+      return parsed;
+    } catch (error) {
+      console.error('Error interpreting voice command:', error);
+      return { action: 'UNKNOWN', confidence: 0, reason: 'Model error' };
+    }
+  }
 }
 
 // Create singleton instance

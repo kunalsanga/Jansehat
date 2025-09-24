@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import './App.css'
+import VoiceCommandMic from "./components/VoiceCommandMic";
 import TopBar from "./components/TopBar"
 import PhotoCarousel from "./components/PhotoCarousel"
 import HealthRecords from './components/HealthRecords'
@@ -153,6 +154,7 @@ function Layout() {
           </main>
         </div>
       </div>
+      <VoiceCommandMic />
       <MobileTabBar />
     </div>
   )
