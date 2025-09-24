@@ -7,9 +7,12 @@ A comprehensive telemedicine application built with React and Express.js, featur
 ## 🚀 Features
 
 - **🤖 AI Symptom Checker** - Powered by Google Gemini AI for preliminary health analysis
+- **🎤 Multilingual Voice Commands** - Speak in Hindi, English, Punjabi with AI-powered intent recognition
 - **📋 Health Records** - Manage and access medical history securely
 - **💊 Medicine Availability** - Check medicine availability and pricing
 - **📹 Video Consultation** - Telemedicine video calling interface
+- **🗺️ Hospital Navigation** - GPS-based hospital and department navigation
+- **🚨 Emergency Mode** - Quick access to emergency services
 - **📱 Mobile Responsive** - Works seamlessly on all devices
 - **🎨 Modern UI** - Clean, professional design with Tailwind CSS
 
@@ -192,12 +195,37 @@ The project uses Tailwind CSS. Modify `src/index.css` or component files for cus
 
 ## 🚀 Deployment
 
-### Frontend (Vercel/Netlify)
+### Deploy to Vercel (Recommended)
+
+1. **Push to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Add multilingual voice commands and AI integration"
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   git push -u origin main
+   ```
+
+2. **Deploy on Vercel:**
+   - Go to [vercel.com](https://vercel.com)
+   - Sign in with GitHub
+   - Click "New Project"
+   - Import your GitHub repository
+   - Set environment variables:
+     - `VITE_GEMINI_API_KEY` = your Gemini API key
+   - Click "Deploy"
+
+3. **For Backend (Railway/Heroku):**
+   - Deploy `server.js` separately
+   - Update `VITE_API_BASE_URL` in Vercel environment variables
+
+### Manual Deployment
+
+#### Frontend (Vercel/Netlify)
 1. Build the project: `npm run build`
 2. Deploy the `dist` folder
 3. Set environment variables in your hosting platform
 
-### Backend (Heroku/Railway)
+#### Backend (Heroku/Railway)
 1. Deploy the `server.js` file
 2. Set environment variables in your hosting platform
 3. Update `VITE_API_BASE_URL` in frontend
