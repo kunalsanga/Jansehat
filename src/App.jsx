@@ -62,7 +62,7 @@ function Home() {
       <section className="rounded-none sm:rounded-3xl bg-gradient-to-b from-blue-50 to-transparent p-3 xs:p-4 sm:p-6 lg:p-8 text-center -mx-2 sm:mx-0 lg:-mx-6 xl:-mx-8 3xl:-mx-12">
         <div className="mx-auto mb-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-white shadow-lg p-2 sm:p-3">
           <img 
-            src="/logo.jpg" 
+            src="/public/logo.jpg" 
             alt="App Logo" 
             className="w-full h-full object-contain"
           />

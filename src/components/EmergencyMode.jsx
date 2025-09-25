@@ -23,46 +23,80 @@ function EmergencyMode() {
       alert('Location access may fail on non-HTTPS sites. Please use HTTPS or localhost.')
     }
     setLocating(true)
+    
     const openMaps = (lat, lng, approx = false) => {
-      const url = `https://www.google.com/maps?q=${lat},${lng}`
+      // Use Google Maps with more precise URL format
+      const url = `https://www.google.com/maps/@${lat},${lng},15z`
       window.open(url, '_blank')
       if (approx) {
         alert('Opened approximate location (IP-based). For precise pin, enable GPS permissions.')
       }
     }
+    
     const fallbackToIP = async (reasonMsg) => {
       try {
-        const res = await fetch('https://ipapi.co/json/')
-        const data = await res.json()
-        if (data && data.latitude && data.longitude) {
-          setLocating(false)
-          openMaps(data.latitude, data.longitude, true)
-        } else {
-          setLocating(false)
-          alert('Unable to get location: ' + reasonMsg)
+        // Try multiple IP geolocation services for better accuracy
+        const services = [
+          'https://ipapi.co/json/',
+          'https://ip-api.com/json/',
+          'https://api.ipgeolocation.io/ipgeo?apiKey=free'
+        ]
+        
+        for (const service of services) {
+          try {
+            const res = await fetch(service, { timeout: 5000 })
+            const data = await res.json()
+            
+            let lat, lng
+            if (data.latitude && data.longitude) {
+              lat = data.latitude
+              lng = data.longitude
+            } else if (data.lat && data.lon) {
+              lat = data.lat
+              lng = data.lon
+            }
+            
+            if (lat && lng) {
+              setLocating(false)
+              openMaps(lat, lng, true)
+              return
+            }
+          } catch (e) {
+            console.log(`Service ${service} failed:`, e)
+            continue
+          }
         }
+        
+        setLocating(false)
+        alert('Unable to get location: ' + reasonMsg)
       } catch (e) {
         setLocating(false)
         alert('Unable to get location: ' + reasonMsg)
       }
     }
+    
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false)
-        const { latitude, longitude } = pos.coords
-        const url = `https://www.google.com/maps?q=${latitude},${longitude}`
-        window.open(url, '_blank')
+        const { latitude, longitude, accuracy } = pos.coords
+        console.log(`GPS coordinates: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
+        openMaps(latitude, longitude, false)
       },
       (err) => {
         // Provide clearer errors and try fallback
         const code = err && typeof err.code === 'number' ? err.code : -1
         let reason = err?.message || 'Unknown error'
-        if (code === 1) reason = 'Permission denied. Please allow location access.'
-        else if (code === 2) reason = 'Position unavailable. Turn on GPS or check network.'
+        if (code === 1) reason = 'Permission denied. Please allow location access in browser settings.'
+        else if (code === 2) reason = 'Position unavailable. Turn on GPS or check network connection.'
         else if (code === 3) reason = 'Timed out. Trying network-based location...'
+        console.log('GPS error:', reason)
         fallbackToIP(reason)
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+      { 
+        enableHighAccuracy: true, 
+        timeout: 15000, 
+        maximumAge: 30000 
+      }
     )
   }
 
