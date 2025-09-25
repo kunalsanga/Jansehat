@@ -15,20 +15,56 @@ function SymptomChecker() {
     const [isListening, setIsListening] = useState(false)
     const [voiceStatus, setVoiceStatus] = useState('')
     const recognitionRef = useRef(null)
+    const analyzeTimerRef = useRef(null)
 
     // Check server connection on component mount
     useEffect(() => {
         checkServerConnection()
     }, [])
 
-    // Check for voice input on component mount
+    // On open: optionally auto-start listening, and avoid analyzing any navigation phrase
     useEffect(() => {
-        const voiceTranscript = localStorage.getItem('voiceTranscript')
-        if (voiceTranscript) {
-            setSymptom(voiceTranscript)
-            localStorage.removeItem('voiceTranscript') // Clear after using
+        const autoAnalyze = localStorage.getItem('autoAnalyze') === '1'
+        const autoListen = localStorage.getItem('autoListen') === '1'
+        const voiceTranscript = localStorage.getItem('voiceTranscript') || ''
+        // Clear navigation phrase like "symptom checker kholo" if present
+        // Remove navigation chatter like "opening symptom checker" from transcript
+        const cleaned = voiceTranscript
+          .replace(/opening\s+symptom(s)?\s+(checker)?/ig, '')
+          .replace(/symptom(s)?\s+(checker)?\s*(kholo|open)?/ig, '')
+          .trim()
+        if (cleaned) setSymptom(cleaned)
+        localStorage.removeItem('voiceTranscript')
+        if (autoListen) {
+            // Start listening immediately on load
+            startVoiceInput()
+            localStorage.removeItem('autoListen')
+        }
+        if (cleaned && autoAnalyze) {
+            // Give a brief tick for UI to update then analyze
+            setTimeout(() => {
+                handleSymptomCheck()
+                localStorage.removeItem('autoAnalyze')
+            }, 600)
         }
     }, [])
+
+  // Listen for live voice events when page already open
+  useEffect(() => {
+    const handler = (e) => {
+      const { text, autoAnalyze, autoListen } = e.detail || {}
+      if (typeof text === 'string' && text.trim().length > 0) {
+        setSymptom(text.trim())
+        if (autoAnalyze) {
+          setTimeout(() => handleSymptomCheck(), 300)
+        }
+      } else if (autoListen) {
+        startVoiceInput()
+      }
+    }
+    window.addEventListener('voice-symptom-input', handler)
+    return () => window.removeEventListener('voice-symptom-input', handler)
+  }, [])
 
     // Cleanup recognition on unmount
     useEffect(() => {
@@ -53,13 +89,17 @@ function SymptomChecker() {
         }
     }
 
-    const handleSymptomCheck = async () => {
-        if (!symptom.trim()) {
+    const handleSymptomCheck = async (textOverride) => {
+        const textToAnalyze = (typeof textOverride === 'string' && textOverride.length > 0)
+          ? textOverride
+          : symptom
+
+        if (!textToAnalyze.trim()) {
             setError(t('symptoms.errorEmpty'))
             return
         }
 
-        if (symptom.trim().length < 10) {
+        if (textToAnalyze.trim().length < 10) {
             setError(t('symptoms.errorShort'))
             return
         }
@@ -69,7 +109,9 @@ function SymptomChecker() {
         setResult(null)
 
         try {
-            const data = await aiService.analyzeSymptoms(symptom)
+            // Ensure state reflects exactly what is analyzed
+            if (textOverride) setSymptom(textToAnalyze)
+            const data = await aiService.analyzeSymptoms(textToAnalyze)
             setResult(data)
         } catch (err) {
             setError(err.message || t('symptoms.statusError'))
@@ -112,15 +154,21 @@ function SymptomChecker() {
             }
 
             if (finalTranscript) {
-                setSymptom(prev => prev + finalTranscript + ' ')
+                // Append and schedule auto analysis using the fresh text
+                let nextText = ''
+                setSymptom(prev => {
+                  nextText = (prev + finalTranscript + ' ')
+                  return nextText
+                })
                 setVoiceStatus('Processing...')
-                
-                // Auto-analyze after a pause
-                setTimeout(() => {
-                    if (symptom.trim().length > 10) {
-                        handleSymptomCheck()
-                    }
-                }, 2000)
+
+                // Debounced auto-analyze to allow short pauses
+                if (analyzeTimerRef.current) clearTimeout(analyzeTimerRef.current)
+                analyzeTimerRef.current = setTimeout(() => {
+                  if (nextText.trim().length > 10) {
+                    handleSymptomCheck(nextText)
+                  }
+                }, 1200)
             } else if (interimTranscript) {
                 setVoiceStatus(`Listening: ${interimTranscript}`)
             }

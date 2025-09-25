@@ -8,9 +8,9 @@ function TopBar() {
       <div className="w-full max-w-9xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 3xl:px-12 py-2 sm:py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
           <img 
-            src="/jansehat-favicon.svg" 
-            alt="JanSehat Logo" 
-            className="w-6 h-6 sm:w-7 sm:h-7"
+            src="/logo.jpg" 
+            alt="App Logo" 
+            className="w-6 h-6 sm:w-7 sm:h-7 rounded"
             loading="eager"
             decoding="async"
             width="28"

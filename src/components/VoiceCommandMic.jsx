@@ -18,6 +18,21 @@ export default function VoiceCommandMic() {
     synth.speak(utterance);
   };
 
+  const isOnSymptomChecker = () => {
+    try {
+      return (window.location && window.location.pathname.includes('/symptoms'));
+    } catch {
+      return false;
+    }
+  };
+
+  const notifySymptomChecker = (detail) => {
+    try {
+      const evt = new CustomEvent('voice-symptom-input', { detail });
+      window.dispatchEvent(evt);
+    } catch {}
+  };
+
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -44,6 +59,8 @@ export default function VoiceCommandMic() {
       setStatus("Interpreting…");
       await handleCommand(text);
       setStatus("");
+      // Stop listening to avoid capturing our own spoken response
+      try { recognition.stop(); } catch {}
     };
 
     recognition.start();
@@ -136,9 +153,31 @@ export default function VoiceCommandMic() {
           speakAndGo(getResponseText('OPEN_EMERGENCY', result), "/emergency");
           break;
         case 'OPEN_SYMPTOM_CHECKER':
-          // Store transcript for symptom checker
-          localStorage.setItem('voiceTranscript', text);
-          speakAndGo(getResponseText('OPEN_SYMPTOM_CHECKER', result), "/symptoms");
+          // If AI returned symptom text, prefill and auto-analyze; otherwise auto-listen
+          localStorage.removeItem('voiceTranscript');
+          localStorage.removeItem('autoAnalyze');
+          const aiSymptoms = result?.symptomsText && String(result.symptomsText).trim();
+
+          if (isOnSymptomChecker()) {
+            if (aiSymptoms) {
+              localStorage.setItem('voiceTranscript', aiSymptoms);
+              localStorage.setItem('autoAnalyze', '1');
+              notifySymptomChecker({ text: aiSymptoms, autoAnalyze: true });
+              // Do not speak "opening" to avoid re-capture; keep UI quiet
+            } else {
+              localStorage.setItem('autoListen', '1');
+              notifySymptomChecker({ autoListen: true });
+              // Suppress speak while already on page
+            }
+          } else {
+            if (aiSymptoms) {
+              localStorage.setItem('voiceTranscript', aiSymptoms);
+              localStorage.setItem('autoAnalyze', '1');
+            } else {
+              localStorage.setItem('autoListen', '1');
+            }
+            speakAndGo(getResponseText('OPEN_SYMPTOM_CHECKER', result), "/symptoms");
+          }
           break;
         case 'OPEN_VIDEO_CONSULTATION':
           speakAndGo(getResponseText('OPEN_VIDEO_CONSULTATION', result), "/video");
@@ -155,7 +194,31 @@ export default function VoiceCommandMic() {
           if (lc.includes("health records")) return speakAndGo("Opening Health Records", "/records");
           if (lc.includes("emergency")) return speakAndGo("Opening Emergency Mode", "/emergency");
           if (lc.includes("symptom")) {
-            localStorage.setItem('voiceTranscript', text);
+            // Try to extract symptoms after the keyword
+            localStorage.removeItem('voiceTranscript');
+            localStorage.removeItem('autoAnalyze');
+            const cleaned = text.replace(/^(.*?symptom(s)?( checker)?( kholo| open)?[:,]?\s*)/i, '');
+
+            if (isOnSymptomChecker()) {
+              if (cleaned && cleaned.trim().length > 0) {
+                const s = cleaned.trim();
+                localStorage.setItem('voiceTranscript', s);
+                localStorage.setItem('autoAnalyze', '1');
+                notifySymptomChecker({ text: s, autoAnalyze: true });
+              } else {
+                localStorage.setItem('autoListen', '1');
+                notifySymptomChecker({ autoListen: true });
+              }
+              // Suppress voice to avoid it being captured as input
+              return;
+            }
+
+            if (cleaned && cleaned.trim().length > 0) {
+              localStorage.setItem('voiceTranscript', cleaned.trim());
+              localStorage.setItem('autoAnalyze', '1');
+            } else {
+              localStorage.setItem('autoListen', '1');
+            }
             return speakAndGo("Opening Symptom Checker", "/symptoms");
           }
           if (lc.includes("video")) return speakAndGo("Opening Video Consultation", "/video");
