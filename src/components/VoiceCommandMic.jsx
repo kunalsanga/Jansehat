@@ -175,8 +175,8 @@ export default function VoiceCommandMic() {
       {/* Mic Button */}
       <button
         onClick={startListening}
-        className={`fixed flex items-center justify-center rounded-full shadow-lg bg-emerald-500 text-white text-xl transition-transform duration-200 z-50
-                    w-14 h-14 bottom-14 sm:bottom-6 right-6
+        className={`fixed flex items-center justify-center rounded-full shadow-lg bg-emerald-500 text-white text-xl transition-transform duration-200 z-40
+                    w-14 h-14 bottom-20 sm:bottom-6 right-6
                     ${listening ? "scale-110 animate-pulse" : ""}`}
         title="Click to speak"
       >
@@ -185,17 +185,17 @@ export default function VoiceCommandMic() {
 
       {/* Optional message display */}
       {message && (
-        <div className="fixed bottom-28 right-6 bg-white px-3 py-2 rounded shadow-md text-sm text-zinc-700 z-50">
+        <div className="fixed bottom-32 right-6 bg-white px-3 py-2 rounded shadow-md text-sm text-zinc-700 z-40">
           You said: {message}
         </div>
       )}
       {detectedLanguage && (
-        <div className="fixed bottom-52 right-6 bg-blue-50 border border-blue-200 px-3 py-2 rounded shadow-sm text-xs text-blue-800 z-50">
+        <div className="fixed bottom-56 right-6 bg-blue-50 border border-blue-200 px-3 py-2 rounded shadow-sm text-xs text-blue-800 z-40">
           Language: {detectedLanguage}
         </div>
       )}
       {status && (
-        <div className="fixed bottom-40 right-6 bg-amber-50 border border-amber-200 px-3 py-2 rounded shadow-sm text-xs text-amber-800 z-50">
+        <div className="fixed bottom-44 right-6 bg-amber-50 border border-amber-200 px-3 py-2 rounded shadow-sm text-xs text-amber-800 z-40">
           {status}
         </div>
       )}
