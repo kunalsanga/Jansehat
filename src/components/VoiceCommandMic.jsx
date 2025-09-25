@@ -105,6 +105,7 @@ export default function VoiceCommandMic() {
         const lang = result?.detectedLanguage?.toLowerCase() || 'en';
         const responses = {
           'hindi': {
+            'OPEN_HOME': 'होम खोल रहा हूँ',
             'OPEN_HEALTH_RECORDS': 'स्वास्थ्य रिकॉर्ड खोल रहे हैं',
             'OPEN_EMERGENCY': 'आपातकालीन मोड खोल रहे हैं',
             'OPEN_SYMPTOM_CHECKER': 'लक्षण जांचकर्ता खोल रहे हैं',
@@ -113,6 +114,7 @@ export default function VoiceCommandMic() {
             'OPEN_NAVIGATION': 'अस्पताल नेविगेशन खोल रहे हैं'
           },
           'punjabi': {
+            'OPEN_HOME': 'ਹੋਮ ਖੋਲ੍ਹ ਰਹੇ ਹਾਂ',
             'OPEN_HEALTH_RECORDS': 'ਸਿਹਤ ਰਿਕਾਰਡ ਖੋਲ੍ਹ ਰਹੇ ਹਾਂ',
             'OPEN_EMERGENCY': 'ਐਮਰਜੈਂਸੀ ਮੋਡ ਖੋਲ੍ਹ ਰਹੇ ਹਾਂ',
             'OPEN_SYMPTOM_CHECKER': 'ਲੱਛਣ ਚੈਕਰ ਖੋਲ੍ਹ ਰਹੇ ਹਾਂ',
@@ -121,6 +123,7 @@ export default function VoiceCommandMic() {
             'OPEN_NAVIGATION': 'ਹਸਪਤਾਲ ਨੈਵੀਗੇਸ਼ਨ ਖੋਲ੍ਹ ਰਹੇ ਹਾਂ'
           },
           'en': {
+            'OPEN_HOME': 'Opening Home',
             'OPEN_HEALTH_RECORDS': 'Opening Health Records',
             'OPEN_EMERGENCY': 'Opening Emergency Mode',
             'OPEN_SYMPTOM_CHECKER': 'Opening Symptom Checker',
@@ -146,6 +149,9 @@ export default function VoiceCommandMic() {
       }
 
       switch (action) {
+        case 'OPEN_HOME':
+          speakAndGo(getResponseText('OPEN_HOME', result), "/");
+          break;
         case 'OPEN_HEALTH_RECORDS':
           speakAndGo(getResponseText('OPEN_HEALTH_RECORDS', result), "/records");
           break;
@@ -191,6 +197,13 @@ export default function VoiceCommandMic() {
         default:
           // Fallback to old keyword rules if AI couldn't determine
           const lc = text.toLowerCase();
+          // Quick nav keywords in EN/HI/PA
+          if (/(^|\s)(home|dashboard|ghar|ਮੁੱਖ|ਘਰ)($|\s)/i.test(lc)) return speakAndGo("Opening Home", "/");
+          if (/(health\s*records|records|record|file|parcha|ਰਿਕਾਰਡ)/i.test(lc)) return speakAndGo("Opening Health Records", "/records");
+          if (/(emergency|sos|madad|ज़रूरी|ਐਮਰਜੈਂਸੀ)/i.test(lc)) return speakAndGo("Opening Emergency Mode", "/emergency");
+          if (/(video|consult|doctor|video consult|ਪਰਾਮਰਸ਼|सलाह)/i.test(lc)) return speakAndGo("Opening Video Consultation", "/video");
+          if (/(medicine|davai|दवाई|ਦਵਾਈ)/i.test(lc)) return speakAndGo("Opening Medicine Finder", "/medicine");
+          if (/(navigation|hospital|map|nav|ਨੈਵੀ|नक़्शा|अस्पताल)/i.test(lc)) return speakAndGo("Opening Hospital Navigation", "/navigation");
           if (lc.includes("health records")) return speakAndGo("Opening Health Records", "/records");
           if (lc.includes("emergency")) return speakAndGo("Opening Emergency Mode", "/emergency");
           if (lc.includes("symptom")) {
@@ -221,11 +234,10 @@ export default function VoiceCommandMic() {
             }
             return speakAndGo("Opening Symptom Checker", "/symptoms");
           }
-          // Heuristic: if the user described symptoms without saying the word "symptom"
-          // e.g., "I have headache and fever", treat it as symptom input
-          const looksLikeSymptoms = /\b(headache|fever|cough|pain|nausea|vomit|cold|flu|sore|throat|dizziness|diarrhea|rash|breath|asthma|injury|bleeding|infection)\b/i.test(lc)
-                                   || text.trim().split(/\s+/).length >= 3;
-          if (looksLikeSymptoms) {
+          // Heuristic: treat as symptoms ONLY if symptom words present AND no route-intent keywords
+          const hasSymptomKeyword = /\b(headache|fever|cough|pain|nausea|vomit|cold|flu|sore|throat|dizz(y|iness)|diarrhea|loose motion|rash|breath(ing)?|shortness of breath|asthma|injury|bleeding|infection|weakness)\b/i.test(lc)
+          const hasRouteIntent = /\b(open|start|go to|video|consult|consultation|medicine|record(s)?|navigation|hospital|emergency)\b/i.test(lc)
+          if (hasSymptomKeyword && !hasRouteIntent) {
             const s = text.trim();
             if (isOnSymptomChecker()) {
               localStorage.setItem('voiceTranscript', s);

@@ -128,13 +128,13 @@ You are an intent classification engine for a healthcare web app. Your task is t
 Rules:
 - The user may speak in ANY language. Detect the language and interpret intent.
 - Map the command to one of these actions exactly:
-  OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION, UNKNOWN
+  OPEN_HOME, OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION, UNKNOWN
 - Include optional parameters when relevant (e.g., destination for navigation, medicine name, etc.).
 - Return ONLY JSON. No markdown, no explanation.
 
 JSON schema:
 {
-  "action": "OPEN_HEALTH_RECORDS | OPEN_EMERGENCY | OPEN_SYMPTOM_CHECKER | OPEN_VIDEO_CONSULTATION | OPEN_MEDICINE | OPEN_NAVIGATION | UNKNOWN",
+  "action": "OPEN_HOME | OPEN_HEALTH_RECORDS | OPEN_EMERGENCY | OPEN_SYMPTOM_CHECKER | OPEN_VIDEO_CONSULTATION | OPEN_MEDICINE | OPEN_NAVIGATION | UNKNOWN",
   "confidence": 0.0, // 0-1
   "parameters": { "medicine": string | undefined, "destination": string | undefined },
   "detectedLanguage": string,
