@@ -56,7 +56,8 @@ function SymptomChecker() {
       if (typeof text === 'string' && text.trim().length > 0) {
         setSymptom(text.trim())
         if (autoAnalyze) {
-          setTimeout(() => handleSymptomCheck(), 300)
+          const payload = text.trim()
+          setTimeout(() => handleSymptomCheck(payload), 200)
         }
       } else if (autoListen) {
         startVoiceInput()
@@ -99,8 +100,8 @@ function SymptomChecker() {
             return
         }
 
-        if (textToAnalyze.trim().length < 10) {
-            setError(t('symptoms.errorShort'))
+        if (textToAnalyze.trim().length < 5) {
+            setError('Please provide more detail (at least 5 characters)')
             return
         }
 
@@ -114,8 +115,9 @@ function SymptomChecker() {
             const data = await aiService.analyzeSymptoms(textToAnalyze)
             setResult(data)
         } catch (err) {
-            setError(err.message || t('symptoms.statusError'))
-            console.error('Symptom check error:', err)
+            const msg = err?.message || t('symptoms.statusError')
+            setError(msg)
+            console.error('Symptom check error:', msg)
         } finally {
             setIsLoading(false)
         }
@@ -165,10 +167,10 @@ function SymptomChecker() {
                 // Debounced auto-analyze to allow short pauses
                 if (analyzeTimerRef.current) clearTimeout(analyzeTimerRef.current)
                 analyzeTimerRef.current = setTimeout(() => {
-                  if (nextText.trim().length > 10) {
+                  if (nextText.trim().length >= 5) {
                     handleSymptomCheck(nextText)
                   }
-                }, 1200)
+                }, 800)
             } else if (interimTranscript) {
                 setVoiceStatus(`Listening: ${interimTranscript}`)
             }
@@ -257,25 +259,6 @@ function SymptomChecker() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">{t('symptoms.describeLabel')}</label>
-                  <div className="flex items-center gap-2">
-                    {!isListening ? (
-                      <button
-                        onClick={startVoiceInput}
-                        className="flex items-center gap-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                      >
-                        <FaMicrophone className="text-xs" />
-                        Voice Input
-                      </button>
-                    ) : (
-                      <button
-                        onClick={stopVoiceInput}
-                        className="flex items-center gap-1 px-3 py-1 text-xs bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
-                      >
-                        <FaStop className="text-xs" />
-                        Stop
-                      </button>
-                    )}
-                  </div>
                 </div>
                 <textarea
                   value={symptom}

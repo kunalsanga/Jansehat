@@ -21,9 +21,13 @@ class AIService {
   }
 
   async checkHealth() {
+    const keyTail = typeof import.meta?.env?.VITE_GEMINI_API_KEY === 'string'
+      ? import.meta.env.VITE_GEMINI_API_KEY.slice(-6)
+      : undefined;
     return {
       status: this.isConfigured ? 'OK' : 'ERROR',
       configured: this.isConfigured,
+      keyTail,
       timestamp: new Date().toISOString()
     };
   }
@@ -33,12 +37,12 @@ class AIService {
       throw new Error('AI service not configured. Please add a valid Gemini API key.');
     }
 
-    if (!symptoms || symptoms.trim().length < 10) {
-      throw new Error('Please provide detailed symptoms (at least 10 characters)');
+    if (!symptoms || symptoms.trim().length < 5) {
+      throw new Error('Please provide more detail (at least 5 characters)');
     }
 
-    try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const tryModel = async (modelName) => {
+      const model = this.genAI.getGenerativeModel({ model: modelName });
 
       const prompt = `
 You are a helpful medical assistant providing preliminary health guidance. Analyze the following symptoms:
@@ -82,9 +86,25 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
         timestamp: new Date().toISOString()
       };
 
+    };
+
+    try {
+      // Primary model
+      return await tryModel("gemini-1.5-flash");
     } catch (error) {
+      const message = (error && (error.message || error.statusText)) ? String(error.message || error.statusText) : String(error);
+      // If quota exceeded, attempt smaller model automatically
+      const isQuota = /quota|429/i.test(message);
+      if (isQuota) {
+        try {
+          return await tryModel("gemini-1.5-flash-8b");
+        } catch (e2) {
+          const m2 = (e2 && (e2.message || e2.statusText)) ? String(e2.message || e2.statusText) : String(e2);
+          throw new Error(`Quota reached. Please retry in a minute or upgrade your plan. Details: ${m2}`);
+        }
+      }
       console.error('Error in symptom analysis:', error);
-      throw new Error('Failed to analyze symptoms. Please try again later.');
+      throw new Error(`Failed to analyze symptoms: ${message}`);
     }
   }
 

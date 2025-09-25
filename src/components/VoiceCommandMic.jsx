@@ -221,6 +221,23 @@ export default function VoiceCommandMic() {
             }
             return speakAndGo("Opening Symptom Checker", "/symptoms");
           }
+          // Heuristic: if the user described symptoms without saying the word "symptom"
+          // e.g., "I have headache and fever", treat it as symptom input
+          const looksLikeSymptoms = /\b(headache|fever|cough|pain|nausea|vomit|cold|flu|sore|throat|dizziness|diarrhea|rash|breath|asthma|injury|bleeding|infection)\b/i.test(lc)
+                                   || text.trim().split(/\s+/).length >= 3;
+          if (looksLikeSymptoms) {
+            const s = text.trim();
+            if (isOnSymptomChecker()) {
+              localStorage.setItem('voiceTranscript', s);
+              localStorage.setItem('autoAnalyze', '1');
+              notifySymptomChecker({ text: s, autoAnalyze: true });
+              return;
+            } else {
+              localStorage.setItem('voiceTranscript', s);
+              localStorage.setItem('autoAnalyze', '1');
+              return speakAndGo("Opening Symptom Checker", "/symptoms");
+            }
+          }
           if (lc.includes("video")) return speakAndGo("Opening Video Consultation", "/video");
           if (lc.includes("medicine")) return speakAndGo("Opening Medicine Finder", "/medicine");
           if (lc.includes("navigation") || lc.includes("hospital")) return speakAndGo("Opening Hospital Navigation", "/navigation");
