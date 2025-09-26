@@ -88,24 +88,26 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
 
     };
 
-    try {
-      // Primary model
-      return await tryModel("gemini-1.5-flash");
-    } catch (error) {
-      const message = (error && (error.message || error.statusText)) ? String(error.message || error.statusText) : String(error);
-      // If quota exceeded, attempt smaller model automatically
-      const isQuota = /quota|429/i.test(message);
-      if (isQuota) {
-        try {
-          return await tryModel("gemini-1.5-flash-8b");
-        } catch (e2) {
-          const m2 = (e2 && (e2.message || e2.statusText)) ? String(e2.message || e2.statusText) : String(e2);
-          throw new Error(`Quota reached. Please retry in a minute or upgrade your plan. Details: ${m2}`);
-        }
+    const modelCandidates = [
+      "gemini-1.5-flash",
+      "gemini-1.5-flash-latest",
+      "gemini-1.5-flash-8b",
+      "gemini-1.5-flash-8b-latest",
+      "gemini-1.0-pro"
+    ];
+
+    let lastErr;
+    for (const name of modelCandidates) {
+      try {
+        return await tryModel(name);
+      } catch (e) {
+        const msg = String(e?.message || e);
+        lastErr = msg;
+        // If it's a quota error and we have more candidates, continue to next; else keep trying
+        continue;
       }
-      console.error('Error in symptom analysis:', error);
-      throw new Error(`Failed to analyze symptoms: ${message}`);
     }
+    throw new Error(`Failed to analyze symptoms: ${lastErr || 'Unknown model error'}`);
   }
 
   async interpretVoiceCommand(transcript, options = {}) {
@@ -118,7 +120,19 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const candidates = ['gemini-1.5-flash','gemini-1.5-flash-latest','gemini-1.5-flash-8b','gemini-1.5-flash-8b-latest','gemini-1.0-pro'];
+      let model;
+      let lastErr;
+      for (const name of candidates) {
+        try {
+          model = this.genAI.getGenerativeModel({ model: name });
+          // quick dry-run call will happen below; if it 404s we catch and try next
+          break;
+        } catch (e) {
+          lastErr = e;
+          continue;
+        }
+      }
       const locale = options.locale || 'auto';
       const nowPathHints = ['/records','/symptoms','/video','/emergency','/medicine','/navigation'];
 
