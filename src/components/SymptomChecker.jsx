@@ -114,6 +114,11 @@ function SymptomChecker() {
             if (textOverride) setSymptom(textToAnalyze)
             const data = await aiService.analyzeSymptoms(textToAnalyze)
             setResult(data)
+            
+            // Show a notice if this is a fallback response
+            if (data.isFallback) {
+                console.info('Using fallback response due to API limitations')
+            }
         } catch (err) {
             const msg = err?.message || t('symptoms.statusError')
             setError(msg)

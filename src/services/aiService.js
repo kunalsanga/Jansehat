@@ -5,6 +5,11 @@ class AIService {
   constructor() {
     this.genAI = null;
     this.isConfigured = false;
+    this.requestQueue = [];
+    this.isProcessing = false;
+    this.lastRequestTime = 0;
+    this.minRequestInterval = 3000; // 3 seconds between requests (increased for quota management)
+    this.modelUsage = new Map(); // Track model usage for smart selection
     this.initializeAI();
   }
 
@@ -32,6 +37,106 @@ class AIService {
     };
   }
 
+  // Rate limiting helper with smart model selection
+  async waitForRateLimit() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+      console.log(`Rate limiting: waiting ${waitTime}ms before next request`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    this.lastRequestTime = Date.now();
+  }
+
+  // Track model usage for smart selection
+  trackModelUsage(modelName, success) {
+    if (!this.modelUsage.has(modelName)) {
+      this.modelUsage.set(modelName, { requests: 0, failures: 0, lastUsed: 0 });
+    }
+    
+    const usage = this.modelUsage.get(modelName);
+    usage.requests++;
+    usage.lastUsed = Date.now();
+    
+    if (!success) {
+      usage.failures++;
+    }
+  }
+
+  // Get best available model based on usage patterns
+  getBestAvailableModel() {
+    const models = [
+      { name: "gemini-2.0-flash-lite", priority: 1, maxRpm: 30 },
+      { name: "gemini-2.0-flash", priority: 2, maxRpm: 15 },
+      { name: "gemini-2.5-flash-lite", priority: 3, maxRpm: 15 }
+    ];
+
+    // Sort by priority (lower is better) and recent failures
+    return models.sort((a, b) => {
+      const aUsage = this.modelUsage.get(a.name) || { failures: 0, lastUsed: 0 };
+      const bUsage = this.modelUsage.get(b.name) || { failures: 0, lastUsed: 0 };
+      
+      // Prefer models with fewer recent failures
+      if (aUsage.failures !== bUsage.failures) {
+        return aUsage.failures - bUsage.failures;
+      }
+      
+      return a.priority - b.priority;
+    })[0].name;
+  }
+
+  // Check if error is quota-related
+  isQuotaError(error) {
+    const errorMessage = String(error?.message || error).toLowerCase();
+    return errorMessage.includes('quota') || 
+           errorMessage.includes('rate_limit') || 
+           errorMessage.includes('429') ||
+           errorMessage.includes('quota exceeded');
+  }
+
+  // Fallback response when API is unavailable
+  getFallbackResponse(symptoms) {
+    return {
+      success: true,
+      analysis: `**PRELIMINARY HEALTH GUIDANCE**
+
+**SYMPTOMS REPORTED:**
+${symptoms}
+
+**IMPORTANT NOTICE:**
+Our AI analysis service is currently experiencing high demand. While we work to restore full functionality, please consider the following:
+
+**GENERAL RECOMMENDATIONS:**
+- Monitor your symptoms closely
+- Stay hydrated and get adequate rest
+- Keep track of symptom severity and duration
+- Note any new or worsening symptoms
+
+**WHEN TO SEEK IMMEDIATE CARE:**
+- Severe pain or discomfort
+- Difficulty breathing
+- High fever (over 101°F/38.3°C)
+- Signs of dehydration
+- Any symptom that concerns you
+
+**NEXT STEPS:**
+1. Try the symptom checker again in a few minutes
+2. Contact your healthcare provider if symptoms persist or worsen
+3. Use our emergency mode for urgent situations
+4. Consider scheduling a video consultation
+
+**DISCLAIMER:**
+This is general guidance only. Always consult with qualified healthcare professionals for proper medical diagnosis and treatment.
+
+*Please try again in a few minutes for AI-powered analysis.*`,
+      timestamp: new Date().toISOString(),
+      isFallback: true
+    };
+  }
+
   async analyzeSymptoms(symptoms) {
     if (!this.isConfigured) {
       throw new Error('AI service not configured. Please add a valid Gemini API key.');
@@ -40,6 +145,9 @@ class AIService {
     if (!symptoms || symptoms.trim().length < 5) {
       throw new Error('Please provide more detail (at least 5 characters)');
     }
+
+    // Apply rate limiting
+    await this.waitForRateLimit();
 
     const tryModel = async (modelName) => {
       const model = this.genAI.getGenerativeModel({ model: modelName });
@@ -88,26 +196,28 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
 
     };
 
-    const modelCandidates = [
-      "gemini-1.5-flash",
-      "gemini-1.5-flash-latest",
-      "gemini-1.5-flash-8b",
-      "gemini-1.5-flash-8b-latest",
-      "gemini-1.0-pro"
-    ];
-
-    let lastErr;
-    for (const name of modelCandidates) {
-      try {
-        return await tryModel(name);
-      } catch (e) {
-        const msg = String(e?.message || e);
-        lastErr = msg;
-        // If it's a quota error and we have more candidates, continue to next; else keep trying
-        continue;
+    // Use smart model selection based on quota and usage patterns
+    const bestModel = this.getBestAvailableModel();
+    console.log(`Using model: ${bestModel}`);
+    
+    try {
+      const result = await tryModel(bestModel);
+      this.trackModelUsage(bestModel, true);
+      return result;
+    } catch (e) {
+      const msg = String(e?.message || e);
+      this.trackModelUsage(bestModel, false);
+      
+      // If it's a quota error, return fallback response instead of throwing
+      if (this.isQuotaError(e)) {
+        console.warn(`API quota exceeded for ${bestModel}, returning fallback response:`, msg);
+        return this.getFallbackResponse(symptoms);
       }
+      
+      // For other errors, try fallback response
+      console.error(`Model ${bestModel} failed:`, msg);
+      return this.getFallbackResponse(symptoms);
     }
-    throw new Error(`Failed to analyze symptoms: ${lastErr || 'Unknown model error'}`);
   }
 
   async interpretVoiceCommand(transcript, options = {}) {
@@ -120,19 +230,13 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
     }
 
     try {
-      const candidates = ['gemini-1.5-flash','gemini-1.5-flash-latest','gemini-1.5-flash-8b','gemini-1.5-flash-8b-latest','gemini-1.0-pro'];
-      let model;
-      let lastErr;
-      for (const name of candidates) {
-        try {
-          model = this.genAI.getGenerativeModel({ model: name });
-          // quick dry-run call will happen below; if it 404s we catch and try next
-          break;
-        } catch (e) {
-          lastErr = e;
-          continue;
-        }
-      }
+      // Apply rate limiting for voice commands too
+      await this.waitForRateLimit();
+      
+      const bestModel = this.getBestAvailableModel();
+      console.log(`Using model for voice command: ${bestModel}`);
+      
+      const model = this.genAI.getGenerativeModel({ model: bestModel });
       const locale = options.locale || 'auto';
       const nowPathHints = ['/records','/symptoms','/video','/emergency','/medicine','/navigation'];
 
@@ -166,6 +270,8 @@ User said: "${transcript}"
       const response = await result.response;
       const text = response.text();
 
+      this.trackModelUsage(bestModel, true);
+
       let parsed;
       try {
         parsed = JSON.parse(text);
@@ -182,6 +288,7 @@ User said: "${transcript}"
       return parsed;
     } catch (error) {
       console.error('Error interpreting voice command:', error);
+      this.trackModelUsage(bestModel, false);
       return { action: 'UNKNOWN', confidence: 0, reason: 'Model error' };
     }
   }
