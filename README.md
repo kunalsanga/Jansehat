@@ -99,6 +99,48 @@ npm run dev
 - **Backend API:** http://localhost:3001
 - **Health Check:** http://localhost:3001/api/health
 
+## 🐳 Run with Docker
+
+> Perfect for teammates who just want to clone the GitHub repo and run everything in a container.
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/kunalsanga/Jansehat.git
+   cd Jansehat
+   ```
+
+2. **Create a `.env` file or export the required environment variables**
+   ```env
+   GEMINI_API_KEY=your_backend_key
+   VITE_GEMINI_API_KEY=your_frontend_key
+   VITE_API_BASE_URL=http://localhost:3001
+   ```
+
+3. **Build the image (inject build-time secrets if needed)**
+   ```bash
+   docker build \
+     --build-arg GEMINI_API_KEY=$GEMINI_API_KEY \
+     --build-arg VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY \
+     --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL \
+     -t jansehat .
+   ```
+
+4. **Run the container**
+   ```bash
+   docker run --rm \
+     -p 3001:3001 \
+     -p 4173:4173 \
+     -e GEMINI_API_KEY=$GEMINI_API_KEY \
+     -e VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY \
+     -e VITE_API_BASE_URL=$VITE_API_BASE_URL \
+     jansehat
+   ```
+
+5. **Open the app**
+   - Frontend: http://localhost:4173
+   - Backend API: http://localhost:3001
+   - Health Check: http://localhost:3001/api/health
+
 ## 📁 Project Structure
 
 ```

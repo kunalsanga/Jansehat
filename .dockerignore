@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.*
+Dockerfile
+npm-debug.log*
+*.log
+.vscode
+.idea
+Thumbs.db
+
