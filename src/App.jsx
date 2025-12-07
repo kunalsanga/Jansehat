@@ -14,6 +14,8 @@ import ServiceCard from './components/ServiceCard'
 import SymptomChecker from './components/SymptomChecker'
 import EmergencyMode from './components/EmergencyMode'
 import HospitalNavigation from './components/HospitalNavigation'
+import AshaCalendar from './components/AshaCalendar'
+import GlobalNotifier from './components/GlobalNotifier'
 
 
 function Section({ title, children }) {
@@ -122,6 +124,13 @@ function Home() {
             title={t('home.hospitalNavigation')}
             description={t('home.descNavigation')}
           />
+          <ServiceCard
+            to="/asha"
+            imgSrc="/images/custom/asha-calendar.jpg"
+            icon="👩‍⚕️"
+            title={'ASHA Calendar'}
+            description={'Open calendar for local events: vaccination, polio drops, health camps.'}
+          />
         </div>
       </div>
 
@@ -136,6 +145,7 @@ function Layout() {
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
       <TopBar />
+      <GlobalNotifier />
       <div className="w-full max-w-9xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 3xl:px-12">
         <div className="flex flex-col lg:flex-row lg:gap-8 pt-2 sm:pt-4 lg:pt-6">
           <SideNav />
@@ -149,6 +159,7 @@ function Layout() {
                 <Route path="/medicine" element={<MedicineAvailability />} />
                 <Route path="/emergency" element={<EmergencyMode />} />
                 <Route path="/navigation" element={<HospitalNavigation />} />
+                <Route path="/asha" element={<AshaCalendar />} />
               </Routes>
             </div>
           </main>

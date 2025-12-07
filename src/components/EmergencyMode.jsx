@@ -7,11 +7,55 @@ function EmergencyMode() {
 
     const handleEmergencyClick = () => {
         setIsCalling(true)
-        // Simulate calling ASHA worker
-        setTimeout(() => {
+        // Prepare a user id (use existing stored id or create one)
+        const userId = localStorage.getItem('currentUserId') || `user-${String(Date.now()).slice(-6)}`
+        localStorage.setItem('currentUserId', userId)
+
+        const sendEmergency = (lat, lng, accuracy) => {
+          const payload = {
+            id: userId,
+            ts: Date.now(),
+            lat: lat ?? null,
+            lng: lng ?? null,
+            accuracy: accuracy ?? null,
+            message: 'User pressed EMERGENCY'
+          }
+          try {
+            // push into an array feed for history
+            const raw = localStorage.getItem('emergency_feed')
+            const feed = raw ? JSON.parse(raw) : []
+            feed.unshift(payload)
+            // cap feed size
+            localStorage.setItem('emergency_feed', JSON.stringify(feed.slice(0, 50)))
+            // also keep latest emergency for quick read
+            localStorage.setItem('latestEmergency', JSON.stringify(payload))
+            // dispatch a custom event so same-tab listeners update immediately
+            window.dispatchEvent(new CustomEvent('app:emergency', { detail: payload }))
+          } catch (e) {
+            console.error('Failed to write emergency to localStorage', e)
+          }
+          setTimeout(() => {
             setIsCalling(false)
             alert('ASHA worker has been notified and is on the way!')
-        }, 2000)
+          }, 800)
+        }
+
+        // Try to get precise location first, then fallback is handled in existing share logic
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              sendEmergency(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy)
+            },
+            (err) => {
+              // still send emergency without precise location
+              console.warn('Geolocation failed for emergency:', err)
+              sendEmergency(null, null, null)
+            },
+            { enableHighAccuracy: true, timeout: 8000 }
+          )
+        } else {
+          sendEmergency(null, null, null)
+        }
     }
 
   const handleShareLocation = () => {
