@@ -1,4 +1,4 @@
-package com.sih.telemed.telemedbackend.dto.PatientRequest;
+package com.sih.telemed.telemedbackend.dto.Patient;
 
 import lombok.Builder;
 import lombok.Data;

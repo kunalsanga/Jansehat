@@ -10,7 +10,6 @@ import lombok.*;
 public class RtcSignalMessage {
 
     private String type;          // "offer", "answer", "candidate", "end", "chat"
-
     private String roomCode;      // which RTC session
     private Long fromUserId;
     private Long toUserId;        // optional; often you just broadcast in a room

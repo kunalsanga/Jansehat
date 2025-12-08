@@ -1,8 +1,8 @@
 package com.sih.telemed.telemedbackend.controller;
 
 import com.sih.telemed.telemedbackend.Repository.UserRepository;
-import com.sih.telemed.telemedbackend.dto.PatientRequest.PatientRequest;
-import com.sih.telemed.telemedbackend.dto.PatientRequest.PatientResponse;
+import com.sih.telemed.telemedbackend.dto.Patient.PatientRequest;
+import com.sih.telemed.telemedbackend.dto.Patient.PatientResponse;
 import com.sih.telemed.telemedbackend.model.Patient;
 import com.sih.telemed.telemedbackend.Repository.PatientRepository;
 import com.sih.telemed.telemedbackend.model.User;

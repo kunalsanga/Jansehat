@@ -18,13 +18,11 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // VERY IMPORTANT: prevents infinite recursion
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private User owner;
 
-    // general info
     private String name;
     private String dob;
     private String email;
@@ -32,9 +30,11 @@ public class Patient {
     @Column(unique = true)
     private String phone;
 
-    private String address;
+    private String address; // village, block, city combined
 
-    // medical info
+    private String village;
+    private String block;
+
     private String bloodGroup;
     private String gender;
     private String bloodPressure;
@@ -42,11 +42,6 @@ public class Patient {
     private String height;
     private String age;
 
-    //New Fields
-    private String village; // e.g., "Alhoran"
-    private String block;
-
-    // abha ID
     private String abhaId;
 
     private LocalDateTime createdAt = LocalDateTime.now();

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RTC WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>RTC WebSocket Tester</h2>
+
+<button onclick="connect()">Connect</button><br><br>
+
+Room Code: <input id="roomCode" value="TEST123" />
+<button onclick="subscribeTopic()">Subscribe</button><br><br>
+
+Type: <input id="type" value="offer" />
+Data: <input id="data" value="hello" />
+<button onclick="sendMessage()">Send Message</button>
+
+<pre id="log"></pre>
+
+<script>
+    let stompClient = null;
+
+    function log(msg) {
+        document.getElementById('log').textContent += msg + "\n";
+    }
+
+    function connect() {
+        let socket = new SockJS('http://localhost:8080/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function () {
+            log("CONNECTED to backend WebSocket");
+        }, function (error) {
+            log("ERROR: " + error);
+        });
+    }
+
+    function subscribeTopic() {
+        const room = document.getElementById("roomCode").value;
+
+        stompClient.subscribe("/topic/rtc/" + room, function (message) {
+            log("RECEIVED: " + message.body);
+        });
+
+        log("Subscribed to /topic/rtc/" + room);
+    }
+
+    function sendMessage() {
+        const room = document.getElementById("roomCode").value;
+        const type = document.getElementById("type").value;
+        const data = document.getElementById("data").value;
+
+        const payload = {
+            roomCode: room,
+            type: type,
+            data: data
+        };
+
+        stompClient.send("/app/rtc/signal", {}, JSON.stringify(payload));
+        log("SENT: " + JSON.stringify(payload));
+    }
+</script>
+</body>
+</html>
