@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, Route, Routes, Navigate, useNavigate } from 'react-router-dom'
+import { NavLink, Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import './App.css'
 import VoiceCommandMic from "./components/VoiceCommandMic";
 import TopBar from "./components/TopBar"
@@ -27,6 +27,7 @@ import SignupRoleSelection from './components/SignupRoleSelection'
 import PatientSignup from './components/PatientSignup'
 import AshaSignup from './components/AshaSignup'
 import DoctorSignup from './components/DoctorSignup'
+import PharmacistDashboard from './components/PharmacistDashboard'
 import PharmacistSignup from './components/PharmacistSignup'
 
 
@@ -158,13 +159,16 @@ function Home() {
 
 
 function MainLayout() {
+  const location = useLocation()
+  const hideSideNav = location.pathname.startsWith('/pharmacist')
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
       <TopBar />
       <GlobalNotifier />
       <div className="w-full max-w-9xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 3xl:px-12">
         <div className="flex flex-col lg:flex-row lg:gap-8 pt-2 sm:pt-4 lg:pt-6">
-          <SideNav />
+          {!hideSideNav && <SideNav />}
           <main className="flex-1 min-w-0 pb-24 sm:pb-6 lg:pb-8 mobile-container">
             <div className="w-full">
               <Routes>
@@ -173,6 +177,7 @@ function MainLayout() {
                 <Route path="/video" element={<VideoConsultation />} />
                 <Route path="/records" element={<HealthRecords />} />
                 <Route path="/medicine" element={<MedicineAvailability />} />
+                <Route path="/pharmacist" element={<PharmacistDashboard />} />
                 <Route path="/emergency" element={<EmergencyMode />} />
                 <Route path="/navigation" element={<HospitalNavigation />} />
                 <Route path="/asha" element={<AshaCalendar />} />
