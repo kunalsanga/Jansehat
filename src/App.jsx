@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, Route, Routes, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom'
 import './App.css'
 import VoiceCommandMic from "./components/VoiceCommandMic";
 import TopBar from "./components/TopBar"
@@ -80,9 +80,9 @@ function Home() {
           onClick={() => navigate('/login')}
           className="mx-auto mb-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-white shadow-lg p-2 sm:p-3 hover:shadow-xl transition-shadow cursor-pointer"
         >
-          <img 
-            src="/logo.jpg" 
-            alt="App Logo" 
+          <img
+            src="/logo.jpg"
+            alt="App Logo"
             className="w-full h-full object-contain"
           />
         </button>
@@ -155,9 +155,6 @@ function Home() {
   )
 }
 
-// SymptomChecker component is now imported from separate file
-
-
 function MainLayout() {
   const location = useLocation()
   const hideSideNav = location.pathname.startsWith('/pharmacist')
@@ -171,17 +168,7 @@ function MainLayout() {
           {!hideSideNav && <SideNav />}
           <main className="flex-1 min-w-0 pb-24 sm:pb-6 lg:pb-8 mobile-container">
             <div className="w-full">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/symptoms" element={<SymptomChecker />} />
-                <Route path="/video" element={<VideoConsultation />} />
-                <Route path="/records" element={<HealthRecords />} />
-                <Route path="/medicine" element={<MedicineAvailability />} />
-                <Route path="/pharmacist" element={<PharmacistDashboard />} />
-                <Route path="/emergency" element={<EmergencyMode />} />
-                <Route path="/navigation" element={<HospitalNavigation />} />
-                <Route path="/asha" element={<AshaCalendar />} />
-              </Routes>
+              <Outlet />
             </div>
           </main>
         </div>
@@ -192,9 +179,10 @@ function MainLayout() {
   )
 }
 
-function Layout() {
+export default function App() {
   return (
     <Routes>
+      {/* Auth / Public Routes */}
       <Route path="/login" element={<LoginRoleSelection />} />
       <Route path="/login/patient" element={<PatientLoginForm />} />
       <Route path="/login/patient/signup" element={<PatientLogin />} />
@@ -207,17 +195,25 @@ function Layout() {
       <Route path="/signup/asha" element={<AshaSignup />} />
       <Route path="/signup/doctor" element={<DoctorSignup />} />
       <Route path="/signup/pharmacist" element={<PharmacistSignup />} />
-      <Route path="/home" element={<MainLayout />} />
-      <Route path="/*" element={<MainLayout />} />
-    </Routes>
-  )
-}
 
-export default function App() {
-  return (
-    <Routes>
+      {/* Main Layout Routes */}
+      <Route element={<MainLayout />}>
+        <Route path="/home" element={<Home />} />
+        <Route path="/symptoms" element={<SymptomChecker />} />
+        <Route path="/video" element={<VideoConsultation />} />
+        <Route path="/records" element={<HealthRecords />} />
+        <Route path="/medicine" element={<MedicineAvailability />} />
+        <Route path="/pharmacist" element={<PharmacistDashboard />} />
+        <Route path="/emergency" element={<EmergencyMode />} />
+        <Route path="/navigation" element={<HospitalNavigation />} />
+        <Route path="/asha" element={<AshaCalendar />} />
+      </Route>
+
+      {/* Redirect Root to Login (or Home if previously logged in logic exists, for now Login) */}
       <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/*" element={<Layout />} />
+
+      {/* Catch all - Redirect to Home or Login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }
