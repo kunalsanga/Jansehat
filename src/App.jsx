@@ -29,6 +29,7 @@ import AshaSignup from './components/AshaSignup'
 import DoctorSignup from './components/DoctorSignup'
 import PharmacistDashboard from './components/PharmacistDashboard'
 import PharmacistSignup from './components/PharmacistSignup'
+import ConsultationDashboard from './components/ConsulationDashboard'
 
 
 function Section({ title, children }) {
@@ -207,6 +208,7 @@ export default function App() {
         <Route path="/emergency" element={<EmergencyMode />} />
         <Route path="/navigation" element={<HospitalNavigation />} />
         <Route path="/asha" element={<AshaCalendar />} />
+        <Route path="/doctor/dashboard" element={<ConsultationDashboard />} />
       </Route>
 
       {/* Redirect Root to Login (or Home if previously logged in logic exists, for now Login) */}
