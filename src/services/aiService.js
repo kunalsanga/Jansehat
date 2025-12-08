@@ -11,6 +11,8 @@ class AIService {
     this.minRequestInterval = 3000; // 3 seconds between requests (increased for quota management)
     this.modelUsage = new Map(); // Track model usage for smart selection
     this.initializeAI();
+    this.localLLMUrl = 'http://localhost:11434/v1/chat/completions'; // Default Ollama endpoint
+    this.localModel = 'qwen2.5:latest';
   }
 
   initializeAI() {
@@ -41,13 +43,13 @@ class AIService {
   async waitForRateLimit() {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
-    
+
     if (timeSinceLastRequest < this.minRequestInterval) {
       const waitTime = this.minRequestInterval - timeSinceLastRequest;
       console.log(`Rate limiting: waiting ${waitTime}ms before next request`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
-    
+
     this.lastRequestTime = Date.now();
   }
 
@@ -56,11 +58,11 @@ class AIService {
     if (!this.modelUsage.has(modelName)) {
       this.modelUsage.set(modelName, { requests: 0, failures: 0, lastUsed: 0 });
     }
-    
+
     const usage = this.modelUsage.get(modelName);
     usage.requests++;
     usage.lastUsed = Date.now();
-    
+
     if (!success) {
       usage.failures++;
     }
@@ -78,12 +80,12 @@ class AIService {
     return models.sort((a, b) => {
       const aUsage = this.modelUsage.get(a.name) || { failures: 0, lastUsed: 0 };
       const bUsage = this.modelUsage.get(b.name) || { failures: 0, lastUsed: 0 };
-      
+
       // Prefer models with fewer recent failures
       if (aUsage.failures !== bUsage.failures) {
         return aUsage.failures - bUsage.failures;
       }
-      
+
       return a.priority - b.priority;
     })[0].name;
   }
@@ -91,10 +93,10 @@ class AIService {
   // Check if error is quota-related
   isQuotaError(error) {
     const errorMessage = String(error?.message || error).toLowerCase();
-    return errorMessage.includes('quota') || 
-           errorMessage.includes('rate_limit') || 
-           errorMessage.includes('429') ||
-           errorMessage.includes('quota exceeded');
+    return errorMessage.includes('quota') ||
+      errorMessage.includes('rate_limit') ||
+      errorMessage.includes('429') ||
+      errorMessage.includes('quota exceeded');
   }
 
   // Fallback response when API is unavailable
@@ -137,6 +139,38 @@ This is general guidance only. Always consult with qualified healthcare professi
     };
   }
 
+  // NEW: Local LLM Support (Ollama / Qwen)
+  async analyzeSymptomsLocal(messages) {
+    try {
+      const response = await fetch(this.localLLMUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.localModel,
+          messages: messages,
+          stream: false // Simpler to handle for now
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Local LLM Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        analysis: data.choices[0].message.content,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Local LLM failed:', error);
+      throw error;
+    }
+  }
+
+  // OLD: Gemini API Support (preserved for fallback/compatibility)
   async analyzeSymptoms(symptoms) {
     if (!symptoms || symptoms.trim().length < 2) {
       throw new Error('Please provide more detail (at least 2 characters)');
@@ -177,7 +211,7 @@ This is general guidance only. Always consult with qualified healthcare professi
 
     const bestModel = this.getBestAvailableModel();
     console.log(`Using model: ${bestModel}`);
-    
+
     try {
       const model = this.genAI.getGenerativeModel({ model: bestModel });
       const prompt = `
@@ -225,12 +259,14 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
     } catch (e) {
       const msg = String(e?.message || e);
       this.trackModelUsage(bestModel, false);
-      
+
+      // If it's a quota error, return fallback response instead of throwing
       if (this.isQuotaError(e)) {
         console.warn(`API quota exceeded for ${bestModel}, returning fallback response:`, msg);
         return this.getFallbackResponse(symptoms);
       }
-      
+
+      // For other errors, try fallback response
       console.error(`Model ${bestModel} failed:`, msg);
       return this.getFallbackResponse(symptoms);
     }
@@ -248,13 +284,13 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
     try {
       // Apply rate limiting for voice commands too
       await this.waitForRateLimit();
-      
+
       const bestModel = this.getBestAvailableModel();
       console.log(`Using model for voice command: ${bestModel}`);
-      
+
       const model = this.genAI.getGenerativeModel({ model: bestModel });
       const locale = options.locale || 'auto';
-      const nowPathHints = ['/records','/symptoms','/video','/emergency','/medicine','/navigation'];
+      const nowPathHints = ['/records', '/symptoms', '/video', '/emergency', '/medicine', '/navigation'];
 
       const prompt = `
 You are an intent classification engine for a healthcare web app. Your task is to read the user's spoken command and output a STRICT JSON object describing the app action.
