@@ -5,10 +5,12 @@ export default function GlobalNotifier() {
   const [notifications, setNotifications] = useState([])
   const [visible, setVisible] = useState(null)
 
-  // If the app is currently showing the ASHA UI (route starts with /asha),
-  // do not render patient notifications here.
-  if (typeof window !== 'undefined' && window.location && window.location.pathname.startsWith('/asha')) {
-    return null
+  // Only show notifier inside the patient UI (we treat '/home' as patient dashboard).
+  // Do not render on login, ASHA, pharmacist or other pages.
+  const isBrowser = typeof window !== 'undefined' && window.location
+  if (isBrowser) {
+    const path = window.location.pathname || ''
+    if (!path.startsWith('/home')) return null
   }
 
   useEffect(() => {
@@ -16,8 +18,14 @@ export default function GlobalNotifier() {
       try {
         const raw = localStorage.getItem('event_notifications')
         const feed = raw ? JSON.parse(raw) : []
-        setNotifications(feed)
-        if (feed.length) setVisible(feed[0])
+        // Only keep notifications that appear to be sent by ASHA workers.
+        const ashaOnly = feed.filter(item => {
+          if (!item) return false
+          const src = (item.sender || item.source || item.from || item.role || item.type || '').toString().toLowerCase()
+          return src.includes('asha') || src.includes('ashadidi') || src.includes('asha_didi')
+        })
+        setNotifications(ashaOnly)
+        if (ashaOnly.length) setVisible(ashaOnly[0])
       } catch (e) { console.error(e) }
     }
 
@@ -31,6 +39,10 @@ export default function GlobalNotifier() {
     function handleCustom(ev) {
       const payload = ev?.detail
       if (!payload) return
+      // Only show if payload looks like it came from an ASHA
+      const src = (payload.sender || payload.source || payload.from || payload.role || payload.type || '').toString().toLowerCase()
+      const isAsha = src.includes('asha') || src.includes('ashadidi') || src.includes('asha_didi')
+      if (!isAsha) return
       setNotifications(prev => [payload, ...prev].slice(0,50))
       setVisible(payload)
     }

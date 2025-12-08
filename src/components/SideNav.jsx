@@ -25,7 +25,7 @@ function SideNav() {
         </div>
       </div>
       <nav className="flex flex-col px-2 pb-4 gap-1">
-        <Item to="/" label={t('common.home')} icon="🏠" />
+        <Item to="/home" label={t('common.home')} icon="🏠" />
         <Item to="/symptoms" label={t('common.symptoms')} icon="🩻" />
         <Item to="/video" label={t('common.video')} icon="🎥" />
         <Item to="/records" label={t('common.records')} icon="📄" />

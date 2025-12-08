@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GEMINI_API_KEY } from '../../config.js';
+import { GEMINI_API_KEY, getApiBaseUrl } from '../../config.js';
 
 class AIService {
   constructor() {
@@ -138,20 +138,48 @@ This is general guidance only. Always consult with qualified healthcare professi
   }
 
   async analyzeSymptoms(symptoms) {
-    if (!this.isConfigured) {
-      throw new Error('AI service not configured. Please add a valid Gemini API key.');
+    if (!symptoms || symptoms.trim().length < 2) {
+      throw new Error('Please provide more detail (at least 2 characters)');
     }
 
-    if (!symptoms || symptoms.trim().length < 5) {
-      throw new Error('Please provide more detail (at least 5 characters)');
+    const apiBase = getApiBaseUrl();
+
+    // Try backend (Ollama Qwen or Gemini fallback)
+    try {
+      const res = await fetch(`${apiBase}/api/symptom-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptoms })
+      });
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || 'Backend error');
+      }
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Backend error');
+      return {
+        success: true,
+        analysis: data.analysis,
+        timestamp: data.timestamp || new Date().toISOString(),
+        modelSource: data.modelSource || 'backend'
+      };
+    } catch (e) {
+      console.error('Backend symptom check failed, trying client Gemini if available:', e);
+    }
+
+    // Client-side Gemini fallback (if configured)
+    if (!this.isConfigured) {
+      throw new Error('AI service not configured. Please add a valid Gemini API key.');
     }
 
     // Apply rate limiting
     await this.waitForRateLimit();
 
-    const tryModel = async (modelName) => {
-      const model = this.genAI.getGenerativeModel({ model: modelName });
-
+    const bestModel = this.getBestAvailableModel();
+    console.log(`Using model: ${bestModel}`);
+    
+    try {
+      const model = this.genAI.getGenerativeModel({ model: bestModel });
       const prompt = `
 You are a helpful medical assistant providing preliminary health guidance. Analyze the following symptoms:
 
@@ -187,34 +215,22 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-
+      this.trackModelUsage(bestModel, true);
       return {
         success: true,
         analysis: text,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        modelSource: 'gemini-client'
       };
-
-    };
-
-    // Use smart model selection based on quota and usage patterns
-    const bestModel = this.getBestAvailableModel();
-    console.log(`Using model: ${bestModel}`);
-    
-    try {
-      const result = await tryModel(bestModel);
-      this.trackModelUsage(bestModel, true);
-      return result;
     } catch (e) {
       const msg = String(e?.message || e);
       this.trackModelUsage(bestModel, false);
       
-      // If it's a quota error, return fallback response instead of throwing
       if (this.isQuotaError(e)) {
         console.warn(`API quota exceeded for ${bestModel}, returning fallback response:`, msg);
         return this.getFallbackResponse(symptoms);
       }
       
-      // For other errors, try fallback response
       console.error(`Model ${bestModel} failed:`, msg);
       return this.getFallbackResponse(symptoms);
     }

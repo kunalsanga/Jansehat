@@ -1,5 +1,5 @@
 // src/components/VoiceCommandMic.jsx
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaMicrophone } from "react-icons/fa";
 import aiService from "../services/aiService";
@@ -9,7 +9,7 @@ export default function VoiceCommandMic() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("");
   const [detectedLanguage, setDetectedLanguage] = useState("");
-  const [lastTranscript, setLastTranscript] = useState("");
+  const recognitionRef = useRef(null);
   const navigate = useNavigate();
 
   const speak = (text) => {
@@ -33,37 +33,65 @@ export default function VoiceCommandMic() {
     } catch {}
   };
 
-  const startListening = () => {
+  // Initialize recognition on mount and cleanup on unmount
+  useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setStatus("Speech Recognition not supported in this browser.");
-      alert("Speech Recognition not supported in this browser.");
       return;
     }
 
     const recognition = new SpeechRecognition();
-    // Let the browser auto-detect language; fallback to English
     recognition.lang = navigator.language || "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
 
     recognition.onstart = () => { setListening(true); setStatus("Listening…"); };
-    recognition.onend = () => { setListening(false); setStatus(""); };
+    recognition.onend = () => { setListening(false); };
     recognition.onerror = (e) => {
       console.error("Speech recognition error", e);
       setStatus(`Mic error: ${e.error || 'unknown'}`);
+      setListening(false);
     };
 
     recognition.onresult = async (event) => {
       const text = event.results[0][0].transcript;
       setMessage(text);
-      setLastTranscript(text);
       setStatus("Interpreting…");
       await handleCommand(text);
       setStatus("");
-      // Stop listening to avoid capturing our own spoken response
-      try { recognition.stop(); } catch {}
+      // Auto-clear message after 3.5 seconds
+      setTimeout(() => setMessage(""), 3500);
     };
 
-    recognition.start();
+    recognitionRef.current = recognition;
+
+    // Cleanup on unmount
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch {}
+      }
+    };
+  }, []);
+
+  const startListening = () => {
+    if (!recognitionRef.current) {
+      setStatus("Speech Recognition not supported in this browser.");
+      alert("Speech Recognition not supported in this browser.");
+      return;
+    }
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      console.log("Already listening or error:", e);
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+      setListening(false);
+    }
   };
 
   const handleCommand = async (text) => {
@@ -264,30 +292,32 @@ export default function VoiceCommandMic() {
 
   return (
     <>
-      {/* Mic Button */}
+      {/* Mic Button - Toggle Stop/Start */}
       <button
-        onClick={startListening}
-        className={`fixed flex items-center justify-center rounded-full shadow-lg bg-emerald-500 text-white text-xl transition-transform duration-200 z-40
-                    w-14 h-14 bottom-20 sm:bottom-6 right-6
-                    ${listening ? "scale-110 animate-pulse" : ""}`}
-        title="Click to speak"
+        onClick={listening ? stopListening : startListening}
+        className={`fixed flex items-center justify-center rounded-full shadow-lg text-white text-xl transition-all duration-200 z-40
+                    w-14 h-14 bottom-24 sm:bottom-6 right-6
+                    ${listening 
+                      ? 'bg-red-500 hover:bg-red-600 scale-110 animate-pulse' 
+                      : 'bg-emerald-500 hover:bg-emerald-600 active:scale-95'}`}
+        title={listening ? "Stop listening" : "Start voice command"}
       >
         <FaMicrophone />
       </button>
 
       {/* Optional message display */}
       {message && (
-        <div className="fixed bottom-32 right-6 bg-white px-3 py-2 rounded shadow-md text-sm text-zinc-700 z-40">
+        <div className="fixed bottom-32 right-6 bg-white px-3 py-2 rounded shadow-md text-sm text-zinc-700 z-40 max-w-xs">
           You said: {message}
         </div>
       )}
       {detectedLanguage && (
-        <div className="fixed bottom-56 right-6 bg-blue-50 border border-blue-200 px-3 py-2 rounded shadow-sm text-xs text-blue-800 z-40">
+        <div className="fixed bottom-56 right-6 bg-blue-50 border border-blue-200 px-3 py-2 rounded shadow-sm text-xs text-blue-800 z-40 max-w-xs">
           Language: {detectedLanguage}
         </div>
       )}
       {status && (
-        <div className="fixed bottom-44 right-6 bg-amber-50 border border-amber-200 px-3 py-2 rounded shadow-sm text-xs text-amber-800 z-40">
+        <div className="fixed bottom-44 right-6 bg-amber-50 border border-amber-200 px-3 py-2 rounded shadow-sm text-xs text-amber-800 z-40 max-w-xs">
           {status}
         </div>
       )}
