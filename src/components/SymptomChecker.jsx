@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { FaMicrophone, FaStop } from 'react-icons/fa'
 import aiService from '../services/aiService.js'
 import AIAnalysisResult from './AIAnalysisResult.jsx'
 
 function SymptomChecker() {
     const { t } = useTranslation()
+    const navigate = useNavigate()
     const [symptom, setSymptom] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [result, setResult] = useState(null)
@@ -16,6 +17,8 @@ function SymptomChecker() {
     const [voiceStatus, setVoiceStatus] = useState('')
     const recognitionRef = useRef(null)
     const analyzeTimerRef = useRef(null)
+    const [showEmergencyModal, setShowEmergencyModal] = useState(false)
+    const [detectedSeverity, setDetectedSeverity] = useState('')
 
     // Check server connection on component mount
     useEffect(() => {
@@ -90,6 +93,24 @@ function SymptomChecker() {
         }
     }
 
+    const evaluateSeverity = (analysisText) => {
+        if (!analysisText) return
+        const text = analysisText.toLowerCase()
+        if (text.includes('severe') || text.includes('emergency') || text.includes('high')) {
+            setDetectedSeverity('severe')
+            setShowEmergencyModal(true)
+        }
+    }
+
+    const triggerEmergencyNavigation = () => {
+        setShowEmergencyModal(false)
+        navigate('/navigation?emergency=1')
+    }
+
+    const callNumber = (number) => {
+        window.open(`tel:${number}`, '_self')
+    }
+
     const handleSymptomCheck = async (textOverride) => {
         const textToAnalyze = (typeof textOverride === 'string' && textOverride.length > 0)
           ? textOverride
@@ -108,12 +129,14 @@ function SymptomChecker() {
         setIsLoading(true)
         setError(null)
         setResult(null)
+        setShowEmergencyModal(false)
 
         try {
             // Ensure state reflects exactly what is analyzed
             if (textOverride) setSymptom(textToAnalyze)
             const data = await aiService.analyzeSymptoms(textToAnalyze)
             setResult(data)
+            evaluateSeverity(data.analysis)
             
             // Show a notice if this is a fallback response
             if (data.isFallback) {
@@ -329,6 +352,53 @@ function SymptomChecker() {
               analysis={result.analysis} 
               timestamp={result.timestamp} 
             />
+          </div>
+        )}
+
+        {showEmergencyModal && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm uppercase font-semibold text-red-600">Severe Alert</div>
+                  <h3 className="text-xl font-bold text-gray-900">Navigate to nearest hospital?</h3>
+                  <p className="text-sm text-gray-600 mt-1">AI detected severe symptoms. Choose an emergency action.</p>
+                </div>
+                <button onClick={() => setShowEmergencyModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-red-700">
+                  <span className="text-lg">🚑</span>
+                  <span>Severity: {detectedSeverity || 'severe'} — prioritize immediate care.</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  onClick={triggerEmergencyNavigation}
+                  className="px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                >
+                  Navigate to hospital
+                </button>
+                <button
+                  onClick={() => callNumber('108')}
+                  className="px-4 py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700"
+                >
+                  Call Ambulance (108)
+                </button>
+                <button
+                  onClick={() => callNumber('104')}
+                  className="px-4 py-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700"
+                >
+                  Call ASHA Worker
+                </button>
+                <button
+                  onClick={() => setShowEmergencyModal(false)}
+                  className="px-4 py-3 rounded-lg border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
