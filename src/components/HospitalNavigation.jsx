@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
@@ -9,6 +9,8 @@ import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
 import 'leaflet-routing-machine'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 import 'leaflet/dist/leaflet.css'
+import decodePolyline from '../utils/decodePolyline'
+import { getApiBaseUrl } from '../../config.js'
 
 const NABHA_COORDS = { lat: 30.3747, lng: 76.1524 } // Nabha, Punjab
 
@@ -49,6 +51,8 @@ const ICONS = {
     user: createPinIcon('#3b82f6', 16)
 }
 
+const STATIC_MAP_KEY = import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY || ''
+
 function RecenterOnNabha() {
     const map = useMap()
     useEffect(() => {
@@ -59,9 +63,11 @@ function RecenterOnNabha() {
 
 function HospitalNavigation() {
     const { t } = useTranslation()
+    const location = useLocation()
+    const apiBase = getApiBaseUrl()
+    const emergencyTriggeredRef = useRef(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedType, setSelectedType] = useState('all')
-    const [userLocation, setUserLocation] = useState('')
     const [currentPosition, setCurrentPosition] = useState(null)
     const [routeDestination, setRouteDestination] = useState(null)
     const [destinationQuery, setDestinationQuery] = useState('')
@@ -70,8 +76,30 @@ function HospitalNavigation() {
     const [routeInstructions, setRouteInstructions] = useState([])
     const mapRef = useRef(null)
     const mapBoxRef = useRef(null)
-
+    const routeLineRef = useRef(null)
     const [medicalFacilities, setMedicalFacilities] = useState([])
+    const [googleFacilities, setGoogleFacilities] = useState([])
+    const [isLowBandwidth, setIsLowBandwidth] = useState(false)
+    const [useStaticMap, setUseStaticMap] = useState(false)
+    const [staticReason, setStaticReason] = useState('')
+    const [googleRoutePoints, setGoogleRoutePoints] = useState([])
+    const googleLayerRef = useRef(null)
+
+    // Detect low-bandwidth connections to switch to static maps gracefully
+    useEffect(() => {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+        if (connection && (connection.effectiveType?.includes('2g') || connection.saveData)) {
+            setIsLowBandwidth(true)
+            setUseStaticMap(true)
+            setStaticReason('Low bandwidth detected, using static map preview.')
+        }
+    }, [])
+
+    // Register a tiny service worker that caches static map images (only when needed)
+    useEffect(() => {
+        if (!useStaticMap || !('serviceWorker' in navigator)) return
+        navigator.serviceWorker.register('/static-map-sw.js').catch(() => {})
+    }, [useStaticMap])
 
     // Fetch real facilities from OpenStreetMap (Overpass API) around Nabha
     useEffect(() => {
@@ -142,13 +170,84 @@ function HospitalNavigation() {
         fetchFacilities()
     }, [])
 
-    const filteredFacilities = medicalFacilities.filter(facility => {
+    const fetchGoogleNearby = React.useCallback(async () => {
+        try {
+            const base = currentPosition || NABHA_COORDS
+            const typesToFetch = selectedType === 'all' ? ['hospital', 'pharmacy'] : [selectedType]
+            const radius = 7000
+
+            const responses = await Promise.all(typesToFetch.map(async (type) => {
+                const url = `${apiBase}/api/maps/nearby?lat=${base.lat}&lng=${base.lng}&type=${type}&radius=${radius}`
+                const res = await fetch(url)
+                if (!res.ok) throw new Error('Failed to load Google Places')
+                const data = await res.json()
+                const places = Array.isArray(data.places) ? data.places : []
+                return places.map((p) => {
+                    const coords = p.geometry?.location
+                    if (!coords?.lat || !coords?.lng) return null
+                    return {
+                        id: `g-${p.place_id}`,
+                        name: p.name || 'Unknown',
+                        type: type === 'pharmacy' ? 'pharmacy' : 'hospital',
+                        address: p.vicinity || 'Address unavailable',
+                        phone: '',
+                        distance: '',
+                        rating: p.rating,
+                        specialties: [],
+                        hours: p.opening_hours?.weekday_text?.join(', ') || '',
+                        emergency: Array.isArray(p.types) ? p.types.includes('hospital') && p.types.includes('emergency_room') : false,
+                        coordinates: { lat: coords.lat, lng: coords.lng }
+                    }
+                }).filter(Boolean)
+            }))
+
+            const merged = responses.flat()
+            setGoogleFacilities(Array.isArray(merged) ? merged : [])
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn('Google Places fetch failed, falling back to OSM only', error)
+            setGoogleFacilities([])
+        }
+    }, [apiBase, currentPosition, selectedType])
+
+    useEffect(() => {
+        fetchGoogleNearby()
+    }, [fetchGoogleNearby])
+
+    const combinedFacilities = useMemo(() => {
+        const merged = [...medicalFacilities, ...googleFacilities]
+        const seen = new Set()
+        return merged.filter((facility) => {
+            const key = `${facility.name}|${facility.coordinates.lat.toFixed(5)}|${facility.coordinates.lng.toFixed(5)}`
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+        })
+    }, [medicalFacilities, googleFacilities])
+
+    const filteredFacilities = useMemo(() => combinedFacilities.filter(facility => {
         const matchesSearch = facility.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             facility.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            facility.specialties.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
+                            (facility.specialties || []).some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
         const matchesType = selectedType === 'all' || facility.type === selectedType
         return matchesSearch && matchesType
-    })
+    }), [combinedFacilities, searchQuery, selectedType])
+
+    const emergencyMode = useMemo(() => {
+        const params = new URLSearchParams(location.search)
+        return params.get('emergency') === '1'
+    }, [location.search])
+
+    // Auto-trigger navigation when coming from an emergency handoff
+    useEffect(() => {
+        if (!emergencyMode || emergencyTriggeredRef.current || filteredFacilities.length === 0) return
+        const target = filteredFacilities.find((f) => f.type === 'hospital') || filteredFacilities[0]
+        if (target) {
+            emergencyTriggeredRef.current = true
+            handleNavigation(target)
+            setTimeout(() => startRouting(target), 400)
+        }
+    }, [emergencyMode, filteredFacilities])
 
     const getTypeIcon = (type) => {
         switch (type) {
@@ -168,6 +267,23 @@ function HospitalNavigation() {
         }
     }
 
+const getGoogleMapEmbedUrl = (coords) => {
+    if (!coords) return null
+    return `https://www.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`
+}
+
+const getGoogleDirectionsUrl = (origin, destination) => {
+    if (!destination) return null
+    const dest = `${destination.lat},${destination.lng}`
+    const originPart = origin ? `&origin=${origin.lat},${origin.lng}` : ''
+    return `https://www.google.com/maps/dir/?api=1&destination=${dest}${originPart}`
+}
+
+const getStaticMapUrl = (coords) => {
+    if (!coords || !STATIC_MAP_KEY) return ''
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${coords.lat},${coords.lng}&zoom=14&size=640x320&markers=color:red|${coords.lat},${coords.lng}&key=${STATIC_MAP_KEY}`
+}
+
     const handleNavigation = (facility) => {
         setSelectedFacility(facility)
         setDestinationQuery(facility.name)
@@ -184,18 +300,55 @@ function HospitalNavigation() {
         } catch (_) {}
     }
 
-    const startRouting = () => {
-        if (!selectedFacility) return
-        setRouteDestination({
-            lat: selectedFacility.coordinates.lat,
-            lng: selectedFacility.coordinates.lng
-        })
+    const startRouting = async (facilityOverride) => {
+        const facility = facilityOverride || selectedFacility
+        if (!facility) return
+        const origin = currentPosition || NABHA_COORDS
+        const destination = facility.coordinates
+        setRouteDestination({ lat: destination.lat, lng: destination.lng })
+        try {
+            const res = await fetch(`${apiBase}/api/maps/route`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    origin: { lat: origin.lat, lng: origin.lng },
+                    destination: { lat: destination.lat, lng: destination.lng }
+                })
+            })
+            if (!res.ok) throw new Error('Directions request failed')
+            const data = await res.json()
+            if (data.polyline) {
+                const decoded = decodePolyline(data.polyline)
+                setGoogleRoutePoints(decoded)
+                setUseStaticMap(false)
+                const summary = []
+                if (data.distance?.text) summary.push(`Distance: ${data.distance.text}`)
+                if (data.duration?.text) summary.push(`ETA: ${data.duration.text}`)
+                setRouteInstructions(summary.length ? summary : ['Route ready'])
+            } else {
+                setGoogleRoutePoints([])
+                setRouteInstructions([])
+                setUseStaticMap(true)
+                setStaticReason('Directions unavailable, showing static map preview.')
+            }
+        } catch (error) {
+            setGoogleRoutePoints([])
+            setUseStaticMap(true)
+            setStaticReason('Directions unavailable, showing static map preview.')
+            // eslint-disable-next-line no-console
+            console.warn('Google Directions failed, falling back to static map', error)
+        }
     }
 
     const clearRoute = () => {
         setRouteDestination(null)
         setSelectedFacility(null)
         setRouteInstructions([])
+        setGoogleRoutePoints([])
+        if (routeLineRef.current && mapRef.current) {
+            mapRef.current.removeLayer(routeLineRef.current)
+            routeLineRef.current = null
+        }
     }
 
     useEffect(() => {
@@ -211,6 +364,19 @@ function HospitalNavigation() {
             { enableHighAccuracy: true, timeout: 5000 }
         )
     }, [])
+
+    // Draw / clear Google polyline on Leaflet map
+    useEffect(() => {
+        if (!mapRef.current) return
+        if (routeLineRef.current) {
+            mapRef.current.removeLayer(routeLineRef.current)
+            routeLineRef.current = null
+        }
+        if (googleRoutePoints.length) {
+            routeLineRef.current = L.polyline(googleRoutePoints, { color: 'blue', weight: 4 }).addTo(mapRef.current)
+            mapRef.current.fitBounds(routeLineRef.current.getBounds(), { padding: [32, 32] })
+        }
+    }, [googleRoutePoints])
 
     function RoutingControl({ from, to }) {
         const map = useMap()
@@ -296,14 +462,34 @@ function HospitalNavigation() {
 
             {/* Map View (TOP) */}
             <div ref={mapBoxRef} className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-2 sm:p-4">
-                <div className="h-80 rounded-lg overflow-hidden">
-                    <MapContainer whenCreated={(map)=>{mapRef.current=map}} center={[NABHA_COORDS.lat, NABHA_COORDS.lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
+                <div className="h-80 rounded-lg overflow-hidden relative">
+                    {useStaticMap && (
+                        <div className="absolute inset-0 z-10 bg-white">
+                            {getStaticMapUrl(routeDestination || selectedFacility?.coordinates || NABHA_COORDS) ? (
+                                <img
+                                    src={getStaticMapUrl(routeDestination || selectedFacility?.coordinates || NABHA_COORDS)}
+                                    alt="Static map preview"
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <div className="h-full w-full grid place-items-center text-sm text-zinc-500 px-4 text-center">
+                                    Static map unavailable. Add VITE_GOOGLE_MAPS_BROWSER_KEY for previews.
+                                </div>
+                            )}
+                            <div className="absolute bottom-0 left-0 right-0 bg-white/90 text-xs text-zinc-700 p-2 flex items-center justify-between">
+                                <span>{staticReason || (isLowBandwidth ? 'Low bandwidth detected, using static map preview.' : 'Using static map preview due to connection limits.')}</span>
+                                <button onClick={() => setUseStaticMap(false)} className="px-2 py-1 bg-blue-600 text-white rounded">Retry live map</button>
+                            </div>
+                        </div>
+                    )}
+                    <MapContainer className={useStaticMap ? 'opacity-30 pointer-events-none' : ''} whenCreated={(map)=>{mapRef.current=map; if (!googleLayerRef.current) { googleLayerRef.current = L.layerGroup().addTo(map) } }} center={[NABHA_COORDS.lat, NABHA_COORDS.lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
                         <RecenterOnNabha />
-                        <RoutingControl from={currentPosition} to={routeDestination} />
+                        {!googleRoutePoints.length && <RoutingControl from={currentPosition} to={routeDestination} />}
                         {currentPosition && (
                             <Marker icon={ICONS.user} position={[currentPosition.lat, currentPosition.lng]}>
                                 <Popup>Your location</Popup>
@@ -312,10 +498,17 @@ function HospitalNavigation() {
                         {filteredFacilities.map((f) => (
                             <Marker eventHandlers={{ click: () => handleNavigation(f) }} icon={ICONS[f.type] || ICONS.hospital} key={f.id} position={[f.coordinates.lat, f.coordinates.lng]}>
                                 <Popup>
-                                    <div className="space-y-1">
+                                    <div className="space-y-2">
                                         <div className="font-semibold">{f.name}</div>
                                         <div className="text-xs text-zinc-600">{f.address}</div>
-                                        <button onClick={() => handleNavigation(f)} className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs">Navigate</button>
+                                        {f.rating && <div className="text-xs text-amber-600">⭐ {f.rating}</div>}
+                                        <div className="flex flex-col gap-1">
+                                            <button onClick={() => handleNavigation(f)} className="px-2 py-1 bg-blue-500 text-white rounded text-xs">Navigate</button>
+                                            <button onClick={() => {
+                                                const url = getGoogleDirectionsUrl(currentPosition || NABHA_COORDS, f.coordinates)
+                                                if (url) window.open(url, '_blank', 'noopener,noreferrer')
+                                            }} className="px-2 py-1 border border-blue-200 text-blue-700 rounded text-xs">Open in Google Maps</button>
+                                        </div>
                                     </div>
                                 </Popup>
                             </Marker>
@@ -357,6 +550,42 @@ function HospitalNavigation() {
                         <h3 className="font-semibold text-blue-800">{t('nav.currentLocation')}</h3>
                         <p className="text-sm text-blue-700">{t('nav.detectingLocation')}</p>
                     </div>
+                </div>
+            </div>
+
+            {/* Google Maps preview + open in Google Maps */}
+            <div className="rounded-xl sm:rounded-2xl bg-white border border-zinc-200 shadow-sm p-3 sm:p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-sm font-semibold text-zinc-800">Google Maps</h2>
+                        <p className="text-xs text-zinc-500">Live view powered by Google</p>
+                    </div>
+                    <button
+                        disabled={!routeDestination && !selectedFacility}
+                        onClick={() => {
+                            const url = getGoogleDirectionsUrl(currentPosition, routeDestination || selectedFacility?.coordinates || NABHA_COORDS)
+                            if (url) window.open(url, '_blank', 'noopener,noreferrer')
+                        }}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium ${routeDestination || selectedFacility ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-zinc-200 text-zinc-500 cursor-not-allowed'}`}
+                    >
+                        Open in Google Maps
+                    </button>
+                </div>
+                <div className="h-64 rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50">
+                    {getGoogleMapEmbedUrl(routeDestination || selectedFacility?.coordinates || NABHA_COORDS) ? (
+                        <iframe
+                            title="Google Maps preview"
+                            src={getGoogleMapEmbedUrl(routeDestination || selectedFacility?.coordinates || NABHA_COORDS)}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            allowFullScreen
+                        />
+                    ) : (
+                        <div className="h-full w-full grid place-items-center text-sm text-zinc-500">Select a destination to view in Google Maps</div>
+                    )}
                 </div>
             </div>
 
