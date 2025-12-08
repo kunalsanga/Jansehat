@@ -30,192 +30,195 @@ import DoctorSignup from './components/DoctorSignup'
 import PharmacistDashboard from './components/PharmacistDashboard'
 import PharmacistSignup from './components/PharmacistSignup'
 import ConsultationDashboard from './components/ConsulationDashboard'
-
+import ErrorBoundary from './components/ErrorBoundary'
 
 function Section({ title, children }) {
-  return (
-    <section className="bg-white border border-zinc-200 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm">
-      <h2 className="text-sm sm:text-base font-semibold mb-2 sm:mb-3">{title}</h2>
-      <div>{children}</div>
-    </section>
-  )
+    return (
+        <section className="bg-white border border-zinc-100 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span className="w-1 h-5 bg-brand-500 rounded-full"></span>
+                {title}
+            </h2>
+            <div>{children}</div>
+        </section>
+    )
 }
 
 function Home() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const carouselRef = useRef(null)
-  const totalSlides = 3
-  const currentIndexRef = useRef(0)
+    const { t } = useTranslation()
+    const navigate = useNavigate()
 
-  useEffect(() => {
-    const container = carouselRef.current
-    if (!container) return
+    return (
+        <div className="space-y-8 sm:space-y-10 lg:space-y-12 pb-10">
+            {/* Hero (full-bleed) */}
+            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-50 via-white to-blue-50 border border-brand-100/50 shadow-sm p-6 sm:p-10 lg:p-12 text-center">
 
-    const id = setInterval(() => {
-      const children = container.children
-      if (!children || children.length === 0) return
-      currentIndexRef.current = (currentIndexRef.current + 1) % children.length
-      const nextChild = children[currentIndexRef.current]
-      container.scrollTo({ left: nextChild.offsetLeft, behavior: 'smooth' })
-    }, 3000)
+                {/* Decorative background elements */}
+                <div className="absolute top-0 left-0 w-64 h-64 bg-brand-100/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl translate-x-1/4 translate-y-1/4"></div>
 
-    function handleResize() {
-      const children = container.children
-      if (!children || children.length === 0) return
-      const child = children[currentIndexRef.current]
-      container.scrollTo({ left: child.offsetLeft, behavior: 'instant' })
-    }
+                <div className="relative z-10 flex flex-col items-center">
+                    <div className="mb-6 p-4 bg-white rounded-2xl shadow-md shadow-brand-100/50">
+                        <img
+                            src="/logo.jpg"
+                            alt="App Logo"
+                            className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                        />
+                    </div>
 
-    window.addEventListener('resize', handleResize)
-    return () => {
-      clearInterval(id)
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-  return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-      {/* Hero (full-bleed) */}
-      <section className="rounded-none sm:rounded-3xl bg-gradient-to-b from-blue-50 to-transparent p-3 xs:p-4 sm:p-6 lg:p-8 text-center -mx-2 sm:mx-0 lg:-mx-6 xl:-mx-8 3xl:-mx-12">
-        <button
-          onClick={() => navigate('/login')}
-          className="mx-auto mb-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-white shadow-lg p-2 sm:p-3 hover:shadow-xl transition-shadow cursor-pointer"
-        >
-          <img
-            src="/logo.jpg"
-            alt="App Logo"
-            className="w-full h-full object-contain"
-          />
-        </button>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight">{t('home.welcome')}</h1>
-        <p className="mt-2 text-sm sm:text-base lg:text-lg text-zinc-600 max-w-2xl mx-auto">{t('home.qualityCare')}</p>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 mb-4">
+                        {t('home.welcome')}
+                    </h1>
+                    <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed">
+                        {t('home.qualityCare')}
+                    </p>
 
-        <div className="mt-4 sm:mt-6 w-full overflow-x-hidden px-2 sm:px-4">
-          <PhotoCarousel />
+                    <div className="mt-8 sm:mt-10 w-full max-w-4xl mx-auto overflow-hidden rounded-2xl shadow-lg border-4 border-white">
+                        <PhotoCarousel />
+                    </div>
+                </div>
+            </section>
+
+            {/* Services Section */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between px-1">
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800">
+                        {t('home.services')}
+                    </h2>
+                    <span className="text-sm font-medium text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-100">
+                        Explore All
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5 sm:gap-6">
+                    <ServiceCard
+                        to="/symptoms"
+                        imgSrc="/images/custom/istockphoto-1680653991-612x612.jpg"
+                        icon="🩺"
+                        title={t('home.symptomChecker')}
+                        description={t('home.descSymptom')}
+                        color="blue"
+                    />
+                    <ServiceCard
+                        to="/video"
+                        imgSrc="/images/vcDoctor.jpg"
+                        icon="📹"
+                        title={t('home.videoConsultation')}
+                        description={t('home.descVideo')}
+                        color="indigo"
+                    />
+                    <ServiceCard
+                        to="/records"
+                        imgSrc="/health-records.jpg"
+                        icon="📄"
+                        title={t('home.healthRecords')}
+                        description={t('home.descRecords')}
+                        color="emerald"
+                    />
+                    <ServiceCard
+                        to="/medicine"
+                        imgSrc="/generated-image (3).png"
+                        icon="💊"
+                        title={t('home.medicineFinder')}
+                        description={t('home.descMedicine')}
+                        color="teal"
+                    />
+                    <ServiceCard
+                        to="/emergency"
+                        imgSrc="/images/custom/2021-05-05T115931Z_1_LYNXMPEH440PR_RTROPTP_4_HEALTH-CORONAVIRUS-INDIA.jpg"
+                        icon="🚨"
+                        title={t('home.emergencyMode')}
+                        description={t('home.descEmergency')}
+                        color="red"
+                    />
+                    <ServiceCard
+                        to="/navigation"
+                        imgSrc="/gps-map-navigator-concept-street-maps-directions-vector-illustration_230920-2779.jpg"
+                        icon="🗺️"
+                        title={t('home.hospitalNavigation')}
+                        description={t('home.descNavigation')}
+                        color="cyan"
+                    />
+                    <ServiceCard
+                        to="/asha"
+                        imgSrc="/images/custom/asha-calendar.jpg"
+                        icon="👩‍⚕️"
+                        title="ASHA Calendar"
+                        description="Open calendar for local events: vaccination, polio drops, health camps."
+                        color="purple"
+                    />
+                </div>
+            </div>
         </div>
-      </section>
-
-      {/* Services Section */}
-      <div className="space-y-4 sm:space-y-6">
-        <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-center lg:text-left">{t('home.services')}</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
-          <ServiceCard
-            to="/symptoms"
-            imgSrc="/images/custom/istockphoto-1680653991-612x612.jpg"
-            icon="🩺"
-            title={t('home.symptomChecker')}
-            description={t('home.descSymptom')}
-          />
-          <ServiceCard
-            to="/video"
-            imgSrc="/images/vcDoctor.jpg"
-            icon="📹"
-            title={t('home.videoConsultation')}
-            description={t('home.descVideo')}
-          />
-          <ServiceCard
-            to="/records"
-            imgSrc="/health-records.jpg"
-            icon="📄"
-            title={t('home.healthRecords')}
-            description={t('home.descRecords')}
-          />
-          <ServiceCard
-            to="/medicine"
-            imgSrc="/generated-image (3).png"
-            icon="💊"
-            title={t('home.medicineFinder')}
-            description={t('home.descMedicine')}
-          />
-          <ServiceCard
-            to="/emergency"
-            imgSrc="/images/custom/2021-05-05T115931Z_1_LYNXMPEH440PR_RTROPTP_4_HEALTH-CORONAVIRUS-INDIA.jpg"
-            icon="🚨"
-            title={t('home.emergencyMode')}
-            description={t('home.descEmergency')}
-          />
-          <ServiceCard
-            to="/navigation"
-            imgSrc="/gps-map-navigator-concept-street-maps-directions-vector-illustration_230920-2779.jpg"
-            icon="🗺️"
-            title={t('home.hospitalNavigation')}
-            description={t('home.descNavigation')}
-          />
-          <ServiceCard
-            to="/asha"
-            imgSrc="/images/custom/asha-calendar.jpg"
-            icon="👩‍⚕️"
-            title={'ASHA Calendar'}
-            description={'Open calendar for local events: vaccination, polio drops, health camps.'}
-          />
-        </div>
-      </div>
-
-    </div>
-  )
+    )
 }
 
 function MainLayout() {
-  const location = useLocation()
-  const hideSideNav = location.pathname.startsWith('/pharmacist') || location.pathname.startsWith('/asha')
+    const location = useLocation()
+    const hideSideNav = location.pathname.startsWith('/pharmacist') || location.pathname.startsWith('/asha')
 
-  return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <TopBar />
-      <GlobalNotifier />
-      <div className="w-full max-w-9xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 3xl:px-12">
-        <div className="flex flex-col lg:flex-row lg:gap-8 pt-2 sm:pt-4 lg:pt-6">
-          {!hideSideNav && <SideNav />}
-          <main className="flex-1 min-w-0 pb-24 sm:pb-6 lg:pb-8 mobile-container">
-            <div className="w-full">
-              <Outlet />
+    return (
+        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-brand-100 selection:text-brand-900">
+            <TopBar />
+            <GlobalNotifier />
+            <div className="w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="flex flex-col lg:flex-row lg:gap-10">
+                    {!hideSideNav && (
+                        <aside className="hidden lg:block w-64 flex-shrink-0">
+                            <div className="sticky top-24">
+                                <SideNav />
+                            </div>
+                        </aside>
+                    )}
+                    <main className="flex-1 min-w-0 pb-24 lg:pb-10">
+                        <ErrorBoundary>
+                            <Outlet />
+                        </ErrorBoundary>
+                    </main>
+                </div>
             </div>
-          </main>
+            <VoiceCommandMic />
+            <MobileTabBar />
         </div>
-      </div>
-      <VoiceCommandMic />
-      <MobileTabBar />
-    </div>
-  )
+    )
 }
 
 export default function App() {
-  return (
-    <Routes>
-      {/* Auth / Public Routes */}
-      <Route path="/login" element={<LoginRoleSelection />} />
-      <Route path="/login/patient" element={<PatientLoginForm />} />
-      <Route path="/login/patient/signup" element={<PatientLogin />} />
-      <Route path="/login/asha" element={<AshaLoginForm />} />
-      <Route path="/login/asha/signup" element={<AshaLogin />} />
-      <Route path="/login/doctor" element={<DoctorLogin />} />
-      <Route path="/login/pharmacist" element={<PharmacistLogin />} />
-      <Route path="/signup" element={<SignupRoleSelection />} />
-      <Route path="/signup/patient" element={<PatientSignup />} />
-      <Route path="/signup/asha" element={<AshaSignup />} />
-      <Route path="/signup/doctor" element={<DoctorSignup />} />
-      <Route path="/signup/pharmacist" element={<PharmacistSignup />} />
+    return (
+        <ErrorBoundary>
+            <Routes>
+                {/* Auth / Public Routes */}
+                <Route path="/login" element={<LoginRoleSelection />} />
+                <Route path="/login/patient" element={<PatientLoginForm />} />
+                <Route path="/login/patient/signup" element={<PatientLogin />} />
+                <Route path="/login/asha" element={<AshaLoginForm />} />
+                <Route path="/login/asha/signup" element={<AshaLogin />} />
+                <Route path="/login/doctor" element={<DoctorLogin />} />
+                <Route path="/login/pharmacist" element={<PharmacistLogin />} />
+                <Route path="/signup" element={<SignupRoleSelection />} />
+                <Route path="/signup/patient" element={<PatientSignup />} />
+                <Route path="/signup/asha" element={<AshaSignup />} />
+                <Route path="/signup/doctor" element={<DoctorSignup />} />
+                <Route path="/signup/pharmacist" element={<PharmacistSignup />} />
 
-      {/* Main Layout Routes */}
-      <Route element={<MainLayout />}>
-        <Route path="/home" element={<Home />} />
-        <Route path="/symptoms" element={<SymptomChecker />} />
-        <Route path="/video" element={<VideoConsultation />} />
-        <Route path="/records" element={<HealthRecords />} />
-        <Route path="/medicine" element={<MedicineAvailability />} />
-        <Route path="/pharmacist" element={<PharmacistDashboard />} />
-        <Route path="/emergency" element={<EmergencyMode />} />
-        <Route path="/navigation" element={<HospitalNavigation />} />
-        <Route path="/asha" element={<AshaCalendar />} />
-        <Route path="/doctor/dashboard" element={<ConsultationDashboard />} />
-      </Route>
+                {/* Main Layout Routes */}
+                <Route element={<MainLayout />}>
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/symptoms" element={<SymptomChecker />} />
+                    <Route path="/video" element={<VideoConsultation />} />
+                    <Route path="/records" element={<HealthRecords />} />
+                    <Route path="/medicine" element={<MedicineAvailability />} />
+                    <Route path="/pharmacist" element={<PharmacistDashboard />} />
+                    <Route path="/emergency" element={<EmergencyMode />} />
+                    <Route path="/navigation" element={<HospitalNavigation />} />
+                    <Route path="/asha" element={<AshaCalendar />} />
+                    <Route path="/doctor/dashboard" element={<ConsultationDashboard />} />
+                </Route>
 
-      {/* Redirect Root to Login (or Home if previously logged in logic exists, for now Login) */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
-      {/* Catch all - Redirect to Home or Login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  )
+                {/* Redirect Root to Login */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+        </ErrorBoundary>
+    )
 }

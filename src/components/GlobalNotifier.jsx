@@ -8,12 +8,10 @@ export default function GlobalNotifier() {
 
   // Only show notifier inside the patient UI (we treat '/home' as patient dashboard).
   // Do not render on login, ASHA, pharmacist or other pages.
-  
+
   /* Use useLocation for reactive updates on route change */
   const location = useLocation()
   const visiblePath = location.pathname.startsWith('/home')
-
-  if (!visiblePath) return null
 
   useEffect(() => {
     function readFromStorage() {
@@ -58,6 +56,8 @@ export default function GlobalNotifier() {
       window.removeEventListener('app:eventNotification', handleCustom)
     }
   }, [])
+
+  if (!visiblePath) return null
 
   if (!visible) return null
 

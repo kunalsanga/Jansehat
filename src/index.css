@@ -4,34 +4,29 @@
 
 /* Reset the Vite starter's centering styles and let Tailwind handle base */
 body {
+  @apply bg-slate-50 text-slate-800 font-sans antialiased;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  @apply bg-zinc-300 rounded-full border-4 border-solid border-transparent bg-clip-content;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  @apply bg-zinc-400;
 }
 
 /* Smooth scrolling */
@@ -62,33 +57,36 @@ html {
   
   /* Better touch targets for mobile */
   .mobile-touch-target {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px;
+    min-width: 48px;
   }
 }
 
 /* Focus styles for better accessibility */
-*:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+*:focus-visible {
+  @apply outline-none ring-2 ring-brand-500 ring-offset-2;
 }
 
 /* Custom component styles */
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700 active:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all shadow-sm hover:shadow-md;
   }
   
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 font-medium hover:bg-zinc-50 hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all shadow-sm;
   }
   
   .card {
-    @apply bg-white border border-zinc-200 rounded-xl shadow-sm;
+    @apply bg-white border border-zinc-100 rounded-2xl shadow-sm transition-all hover:shadow-md;
+  }
+
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/50 shadow-sm;
   }
   
   .input-field {
-    @apply w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
+    @apply w-full px-4 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all placeholder:text-zinc-400;
   }
 }
 
