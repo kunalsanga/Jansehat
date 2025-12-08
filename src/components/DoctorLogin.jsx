@@ -40,7 +40,7 @@ function DoctorLogin() {
 
   const validateForm = () => {
     const newErrors = {}
-    
+
     if (!formData.uid.trim()) newErrors.uid = 'UID is required'
     if (!formData.name.trim()) newErrors.name = 'Name is required'
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required'
@@ -57,12 +57,12 @@ function DoctorLogin() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    
+
     if (validateForm()) {
       console.log('Form submitted:', formData)
-      // Here you would typically send the data to your backend
-      alert('Account created successfully!')
-      navigate('/login')
+      // KEEPING main branch logic: Direct to dashboard with login message
+      alert('Welcome back, Doctor!')
+      navigate('/doctor/dashboard')
     }
   }
 
@@ -93,9 +93,8 @@ function DoctorLogin() {
               value={formData.uid}
               onChange={handleInputChange}
               placeholder="Enter your UID"
-              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                errors.uid ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-              }`}
+              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.uid ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                }`}
             />
             {errors.uid && <p className="text-red-500 text-xs mt-1">{errors.uid}</p>}
           </div>
@@ -111,9 +110,8 @@ function DoctorLogin() {
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Enter your full name"
-              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                errors.name ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-              }`}
+              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                }`}
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
@@ -129,9 +127,8 @@ function DoctorLogin() {
               value={formData.phoneNumber}
               onChange={handleInputChange}
               placeholder="Enter your 10-digit phone number"
-              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                errors.phoneNumber ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-              }`}
+              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.phoneNumber ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                }`}
             />
             {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
           </div>
@@ -147,9 +144,8 @@ function DoctorLogin() {
               value={formData.specialization}
               onChange={handleInputChange}
               placeholder="e.g., General Practitioner, Cardiologist, Pediatrician"
-              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                errors.specialization ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-              }`}
+              className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.specialization ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                }`}
             />
             {errors.specialization && <p className="text-red-500 text-xs mt-1">{errors.specialization}</p>}
           </div>
@@ -169,9 +165,8 @@ function DoctorLogin() {
                   value={formData.hospitalName}
                   onChange={handleInputChange}
                   placeholder="Enter your hospital name"
-                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                    errors.hospitalName ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.hospitalName ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                    }`}
                 />
                 {errors.hospitalName && <p className="text-red-500 text-xs mt-1">{errors.hospitalName}</p>}
               </div>
@@ -186,9 +181,8 @@ function DoctorLogin() {
                   value={formData.hospitalPhoneNumber}
                   onChange={handleInputChange}
                   placeholder="Enter hospital contact number"
-                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                    errors.hospitalPhoneNumber ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.hospitalPhoneNumber ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                    }`}
                 />
                 {errors.hospitalPhoneNumber && <p className="text-red-500 text-xs mt-1">{errors.hospitalPhoneNumber}</p>}
               </div>
@@ -210,9 +204,8 @@ function DoctorLogin() {
                   value={formData.address.village}
                   onChange={handleInputChange}
                   placeholder="Enter your village name"
-                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                    errors.village ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.village ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                    }`}
                 />
                 {errors.village && <p className="text-red-500 text-xs mt-1">{errors.village}</p>}
               </div>
@@ -227,9 +220,8 @@ function DoctorLogin() {
                   value={formData.address.block}
                   onChange={handleInputChange}
                   placeholder="Enter your block name"
-                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                    errors.block ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.block ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                    }`}
                 />
                 {errors.block && <p className="text-red-500 text-xs mt-1">{errors.block}</p>}
               </div>
@@ -244,9 +236,8 @@ function DoctorLogin() {
                   value={formData.address.city}
                   onChange={handleInputChange}
                   placeholder="Enter your city name"
-                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                    errors.city ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 ${errors.city ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-slate-400'
+                    }`}
                 />
                 {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
               </div>

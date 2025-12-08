@@ -1,487 +1,412 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { FaMicrophone, FaStop, FaPaperPlane } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next' // KEEP: i18n
+import { NavLink, useNavigate } from 'react-router-dom' // KEEP: useNavigate for emergency
+import { FaMicrophone, FaStop, FaPaperPlane, FaUser, FaStethoscope } from 'react-icons/fa' // MERGED Icons
+import ReactMarkdown from 'react-markdown' // KEEP: ReactMarkdown from main
+import remarkGfm from 'remark-gfm' // KEEP: remarkGfm from main
 import aiService from '../services/aiService.js'
-import AIAnalysisResult from './AIAnalysisResult.jsx'
+
+// Helper component for rendering AI results (from i18n-integration)
+function AIAnalysisResult({ analysis, timestamp, modelSource }) {
+    // Note: We are using ReactMarkdown now, so this helper structure needs adjustment
+    // Since the main branch provides ReactMarkdown logic, we'll embed the emergency check here.
+    return (
+        <div className="prose prose-zinc max-w-none text-[15px] leading-7">
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                    ul: ({ node, ...props }) => <ul className="list-disc pl-4 space-y-1 my-2" {...props} />,
+                    ol: ({ node, ...props }) => <ol className="list-decimal pl-4 space-y-1 my-2" {...props} />,
+                    h1: ({ node, ...props }) => <h1 className="text-xl font-bold my-4" {...props} />,
+                    h2: ({ node, ...props }) => <h2 className="text-lg font-bold my-3" {...props} />,
+                    h3: ({ node, ...props }) => <h3 className="text-base font-bold my-2" {...props} />,
+                    p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                    strong: ({ node, ...props }) => <strong className="font-semibold text-zinc-900" {...props} />,
+                    li: ({ node, ...props }) => <li className="pl-1" {...props} />,
+                }}
+            >
+                {analysis}
+            </ReactMarkdown>
+        </div>
+    );
+}
 
 function SymptomChecker() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const [symptom, setSymptom] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
-  const [connectionStatus, setConnectionStatus] = useState('checking')
-  const [isListening, setIsListening] = useState(false)
-  const [voiceStatus, setVoiceStatus] = useState('')
-  const recognitionRef = useRef(null)
-  const analyzeTimerRef = useRef(null)
-  const [showEmergencyModal, setShowEmergencyModal] = useState(false)
-  const [detectedSeverity, setDetectedSeverity] = useState('')
-  const messagesEndRef = useRef(null)
-  const streamInterval = useRef(null)
-  const [messages, setMessages] = useState([
-    { id: 'welcome', role: 'assistant', content: null, isAnalysis: false, text: 'Hi! I can give preliminary health insights based on your symptoms. Please describe what you are feeling.' }
-  ])
-
-  // Scroll to bottom on new message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading])
-
-  // Check server connection on component mount
-  useEffect(() => {
-    checkServerConnection()
-  }, [])
-
-  // Cleanup streaming on unmount
-  useEffect(() => {
-    return () => {
-      if (streamInterval.current) clearInterval(streamInterval.current)
-    }
-  }, [])
-
-  // On open: optionally auto-start listening, and avoid analyzing any navigation phrase
-  useEffect(() => {
-    const autoAnalyze = localStorage.getItem('autoAnalyze') === '1'
-    const autoListen = localStorage.getItem('autoListen') === '1'
-    const voiceTranscript = localStorage.getItem('voiceTranscript') || ''
-    // Clear navigation phrase like "symptom checker kholo" if present
-    // Remove navigation chatter like "opening symptom checker" from transcript
-    const cleaned = voiceTranscript
-      .replace(/opening\s+symptom(s)?\s+(checker)?/ig, '')
-      .replace(/symptom(s)?\s+(checker)?\s*(kholo|open)?/ig, '')
-      .trim()
-    if (cleaned) setSymptom(cleaned)
-    localStorage.removeItem('voiceTranscript')
-    if (autoListen) {
-      // Start listening immediately on load
-      startVoiceInput()
-      localStorage.removeItem('autoListen')
-    }
-    if (cleaned && autoAnalyze) {
-      // Give a brief tick for UI to update then analyze
-      setTimeout(() => {
-        handleSymptomCheck()
-        localStorage.removeItem('autoAnalyze')
-      }, 600)
-    }
-  }, [])
-
-  // Listen for live voice events when page already open
-  useEffect(() => {
-    const handler = (e) => {
-      const { text, autoAnalyze, autoListen } = e.detail || {}
-      if (typeof text === 'string' && text.trim().length > 0) {
-        setSymptom(text.trim())
-        if (autoAnalyze) {
-          const payload = text.trim()
-          setTimeout(() => handleSymptomCheck(payload), 200)
-        }
-      } else if (autoListen) {
-        startVoiceInput()
-      }
-    }
-    window.addEventListener('voice-symptom-input', handler)
-    return () => window.removeEventListener('voice-symptom-input', handler)
-  }, [])
-
-  // Cleanup recognition on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
-      }
-    }
-  }, [])
-
-  const checkServerConnection = async () => {
-    try {
-      const healthStatus = await aiService.checkHealth()
-      if (healthStatus.status === 'OK') {
-        setConnectionStatus('connected')
-      } else {
-        setConnectionStatus('error')
-      }
-    } catch (err) {
-      setConnectionStatus('error')
-      console.error('AI service connection failed:', err)
-    }
-  }
-
-  const evaluateSeverity = (analysisText) => {
-    if (!analysisText) return
-
-    // 1. Try to find the specific "URGENCY LEVEL" section first
-    const urgencySectionMatch = analysisText.match(/\*\*URGENCY LEVEL:?\*\*\s*([\s\S]*?)(?=\*\*|$)/i)
-
-    if (urgencySectionMatch && urgencySectionMatch[1]) {
-      const content = urgencySectionMatch[1].toLowerCase()
-      if (content.includes('high') || content.includes('critical') || content.includes('emergency') || content.includes('immediate')) {
-        setDetectedSeverity('High Urgency')
-        setShowEmergencyModal(true)
-        return
-      }
-    }
-
-    // 2. Fallback: Only check for very explicit phrases at the start if section parsing fails
-    // (Preventing "not severe" from triggering it)
-    const lower = analysisText.toLowerCase()
-    if (lower.includes('urgency level: high') || lower.includes('urgency level: critical')) {
-      setDetectedSeverity('High Urgency')
-      setShowEmergencyModal(true)
-    }
-  }
-
-  const triggerEmergencyNavigation = () => {
-    setShowEmergencyModal(false)
-    navigate('/navigation?emergency=1')
-  }
-
-  const callNumber = (number) => {
-    window.open(`tel:${number}`, '_self')
-  }
-
-  const handleSymptomCheck = async (textOverride) => {
-    const textToAnalyze = (typeof textOverride === 'string' && textOverride.length > 0)
-      ? textOverride
-      : symptom
-
-    if (!textToAnalyze.trim()) {
-      setError(t('symptoms.errorEmpty'))
-      return
-    }
-
-    if (textToAnalyze.trim().length < 2) {
-      setError('Please provide more detail (at least 2 characters)')
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-    setResult(null)
-    setShowEmergencyModal(false)
-    const userMessage = { id: `u-${Date.now()}`, role: 'user', content: null, isAnalysis: false, text: textToAnalyze.trim() }
-    setMessages(prev => [...prev, userMessage])
-    setSymptom('') // Clear input after sending
-
-    try {
-      // Ensure state reflects exactly what is analyzed
-      const data = await aiService.analyzeSymptoms(textToAnalyze)
-      setResult(data)
-      evaluateSeverity(data.analysis)
-
-      // Start simulated streaming
-      setIsLoading(false) // Stop loading spinner, start streaming text
-
-      const assistantMsgId = `a-${Date.now()}`
-      // Add empty assistant message first
-      setMessages(prev => [
-        ...prev,
+    const { t } = useTranslation() // KEEP: i18n
+    const navigate = useNavigate() // KEEP: useNavigate
+    
+    // MERGED/ADOPTED STATE from main branch (Conversational Chat Model)
+    const [messages, setMessages] = useState([
         {
-          id: assistantMsgId,
-          role: 'assistant',
-          content: '', // Start empty
-          isAnalysis: true,
-          timestamp: data.timestamp,
-          modelSource: data.modelSource,
-          text: null
+            role: 'assistant',
+            content: t('symptoms.welcome'), // Use i18n for welcome message
+            timestamp: new Date().toISOString()
         }
-      ])
+    ])
+    const [input, setInput] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [isListening, setIsListening] = useState(false)
+    const [voiceStatus, setVoiceStatus] = useState('')
+    const messagesEndRef = useRef(null)
+    const recognitionRef = useRef(null)
+    
+    // KEEP: Emergency Modal State
+    const [showEmergencyModal, setShowEmergencyModal] = useState(false)
+    const [detectedSeverity, setDetectedSeverity] = useState('')
 
-      let currentIndex = 0
-      const fullText = data.analysis
-      const streamSpeed = 10 // ms
+    // KEEP: Scroll to bottom
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
 
-      if (streamInterval.current) clearInterval(streamInterval.current)
+    // KEEP: Scroll on message change
+    useEffect(() => {
+        scrollToBottom()
+    }, [messages])
 
-      streamInterval.current = setInterval(() => {
-        currentIndex += 3 // Speed: 3 chars per tick
+    // KEEP: Cleanup recognition
+    useEffect(() => {
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop()
+            }
+        }
+    }, [])
 
-        if (currentIndex >= fullText.length) {
-          currentIndex = fullText.length
-          clearInterval(streamInterval.current)
+    // NEW LOGIC: Emergency Detection (Adapted from i18n-integration)
+    const evaluateSeverity = (analysisText) => {
+        if (!analysisText) return
+
+        // 1. Try to find the specific "URGENCY LEVEL" section first
+        const urgencySectionMatch = analysisText.match(/\*\*URGENCY LEVEL:?\*\*\s*([\s\S]*?)(?=\*\*|$)/i)
+
+        if (urgencySectionMatch && urgencySectionMatch[1]) {
+            const content = urgencySectionMatch[1].toLowerCase()
+            if (content.includes('high') || content.includes('critical') || content.includes('emergency') || content.includes('immediate')) {
+                setDetectedSeverity(t('symptoms.severityHigh')) // Use i18n
+                setShowEmergencyModal(true)
+                return
+            }
         }
 
-        const currentWindow = fullText.substring(0, currentIndex)
-
-        setMessages(prev => prev.map(msg =>
-          msg.id === assistantMsgId
-            ? { ...msg, content: currentWindow }
-            : msg
-        ))
-
-      }, streamSpeed)
-
-      // Show a notice if this is a fallback response
-      if (data.isFallback) {
-        console.info('Using fallback response due to API limitations')
-      }
-    } catch (err) {
-      setIsLoading(false)
-      const msg = err?.message || t('symptoms.statusError')
-      setError(msg)
-      console.error('Symptom check error:', msg)
-      setMessages(prev => [
-        ...prev,
-        { id: `err-${Date.now()}`, role: 'assistant', content: null, isAnalysis: false, text: `Error: ${msg}`, isError: true }
-      ])
-    }
-  }
-
-  const startVoiceInput = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      setVoiceStatus('Speech Recognition not supported')
-      return
+        // 2. Fallback: Check for explicit phrases
+        const lower = analysisText.toLowerCase()
+        if (lower.includes('urgency level: high') || lower.includes('urgency level: critical')) {
+            setDetectedSeverity(t('symptoms.severityHigh')) // Use i18n
+            setShowEmergencyModal(true)
+        }
     }
 
-    const recognition = new SpeechRecognition()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = navigator.language || 'en-US'
-
-    recognitionRef.current = recognition
-
-    recognition.onstart = () => {
-      setIsListening(true)
-      setVoiceStatus('Listening...')
+    // KEEP: Emergency Navigation Handlers
+    const triggerEmergencyNavigation = () => {
+        setShowEmergencyModal(false)
+        navigate('/navigation?emergency=1')
     }
 
-    recognition.onresult = (event) => {
-      let finalTranscript = ''
-      let interimTranscript = ''
+    const callNumber = (number) => {
+        window.open(`tel:${number}`, '_self')
+    }
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript
+    // ADOPT MAIN LOGIC: Send Message (Conversational, Streaming)
+    const handleSendMessage = async () => {
+        if (!input.trim() || isLoading) return
+
+        const userMessage = {
+            role: 'user',
+            content: input.trim(),
+            timestamp: new Date().toISOString()
+        }
+
+        setMessages(prev => [...prev, userMessage])
+        const textToAnalyze = input.trim(); // Capture text before clearing
+        setInput('')
+        setIsLoading(true)
+
+        try {
+            // Prepare context for the AI
+            const history = messages.concat(userMessage).map(m => ({
+                role: m.role,
+                content: m.content
+            }));
+
+            // Create a placeholder for the bot's response
+            const botMessageId = Date.now();
+            const initialBotMessage = {
+                role: 'assistant',
+                content: '',
+                timestamp: new Date().toISOString(),
+                id: botMessageId
+            }
+            setMessages(prev => [...prev, initialBotMessage])
+
+            let fullAnalysisText = ""; // To evaluate severity after stream finishes
+
+            // Handler for streaming chunks
+            const onChunk = (chunk) => {
+                fullAnalysisText += chunk; // Build the full text
+                setMessages(prev => prev.map(msg => {
+                    if (msg.id === botMessageId) {
+                        return { ...msg, content: msg.content + chunk }
+                    }
+                    return msg
+                }))
+            };
+
+            // Call Local LLM with streaming
+            await aiService.analyzeSymptomsLocal(history, onChunk)
+            
+            // AFTER STREAM FINISHES: Evaluate Severity
+            evaluateSeverity(fullAnalysisText) 
+
+        } catch (error) {
+            console.error('Chat error:', error)
+            const errorMessage = {
+                role: 'assistant',
+                content: t('symptoms.errorConnection'), // Use i18n
+                timestamp: new Date().toISOString(),
+                isError: true
+            }
+            setMessages(prev => [...prev, errorMessage])
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    // ADOPT MAIN LOGIC: Keyboard Handler
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            handleSendMessage()
+        }
+    }
+
+    // ADOPT MAIN LOGIC: Speech Recognition
+    const startVoiceInput = () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        if (!SpeechRecognition) {
+            setVoiceStatus(t('symptoms.errorVoiceSupport')) // Use i18n
+            return
+        }
+
+        const recognition = new SpeechRecognition()
+        recognition.continuous = false
+        recognition.interimResults = true
+        // Use current i18n language
+        recognition.lang = t('i18n.localeCode') || 'en-US' 
+
+        recognitionRef.current = recognition
+
+        recognition.onstart = () => {
+            setIsListening(true)
+            setVoiceStatus(t('symptoms.voiceListening')) // Use i18n
+        }
+
+        recognition.onresult = (event) => {
+            let finalTranscript = ''
+            let interimTranscript = ''
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript
+                } else {
+                    interimTranscript += transcript
+                }
+            }
+
+            if (finalTranscript) {
+                setInput(prev => prev + (prev ? ' ' : '') + finalTranscript)
+                setIsListening(false)
+                setVoiceStatus('')
+            } else if (interimTranscript) {
+                setVoiceStatus(interimTranscript)
+            }
+        }
+
+        recognition.onend = () => {
+            setIsListening(false)
+            setVoiceStatus('')
+        }
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error)
+            setIsListening(false)
+            setVoiceStatus(t('symptoms.errorVoice') + event.error) // Use i18n
+        }
+
+        recognition.start()
+    }
+
+    const stopVoiceInput = () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop()
+            setIsListening(false)
+            setVoiceStatus('')
+        }
+    }
+
+    const toggleVoice = () => {
+        if (isListening) {
+            stopVoiceInput()
         } else {
-          interimTranscript += transcript
+            startVoiceInput()
         }
-      }
-
-      if (finalTranscript) {
-        // Append and schedule auto analysis using the fresh text
-        let nextText = ''
-        setSymptom(prev => {
-          nextText = (prev + finalTranscript + ' ')
-          return nextText
-        })
-        setVoiceStatus('Processing...')
-
-        // Debounced auto-analyze to allow short pauses
-        if (analyzeTimerRef.current) clearTimeout(analyzeTimerRef.current)
-        analyzeTimerRef.current = setTimeout(() => {
-          if (nextText.trim().length >= 5) {
-            handleSymptomCheck(nextText)
-          }
-        }, 800)
-      } else if (interimTranscript) {
-        setVoiceStatus(`Listening: ${interimTranscript}`)
-      }
     }
 
-    recognition.onend = () => {
-      setIsListening(false)
-      setVoiceStatus('')
-    }
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error)
-      setIsListening(false)
-      setVoiceStatus(`Error: ${event.error}`)
-    }
-
-    recognition.start()
-  }
-
-  const stopVoiceInput = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      setIsListening(false)
-      setVoiceStatus('')
-    }
-  }
-
-  return (
-    <div className="flex flex-col h-[100dvh] bg-white">
-      {/* Header - Minimalist */}
-      <header className="shrink-0 h-14 md:h-16 border-b border-gray-100 flex items-center justify-between px-4 sticky top-0 bg-white/80 backdrop-blur-md z-10">
-        <div className="flex items-center gap-3">
-          <NavLink to="/" className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 grid place-items-center hover:bg-gray-100 transition-colors text-gray-600">
-            ←
-          </NavLink>
-          <h1 className="font-semibold text-lg text-gray-800 flex items-center gap-2">
-            Jansehat AI
-            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">Symptom Checker</span>
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
-          {connectionStatus === 'error' ? (
-            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full cursor-pointer hover:bg-red-100" onClick={checkServerConnection}>
-              <span>Server Offline</span>
-              <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            </div>
-          ) : (
-            <div className="w-2 h-2 rounded-full bg-green-500" title="Connected"></div>
-          )}
-        </div>
-      </header>
-
-      {/* Chat Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth p-4 md:p-6 pb-32">
-        <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">
-          {messages.map((m) => (
-            <div key={m.id} className={`flex gap-3 md:gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {/* Avatar */}
-              {m.role === 'assistant' && (
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white grid place-items-center shadow-sm mt-1">
-                  {/* Medical Pulse Icon */}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+    return (
+        <div className="flex flex-col h-screen bg-white text-zinc-800">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-100 bg-white sticky top-0 z-10">
+                <NavLink to="/" className="shrink-0 w-8 h-8 rounded-full hover:bg-zinc-100 grid place-items-center text-zinc-600 transition-colors">←</NavLink>
+                <div className="flex items-center gap-2">
+                    <span className="text-zinc-800 font-semibold px-2 py-1 rounded hover:bg-zinc-100 cursor-pointer transition-colors">
+                        {t('symptoms.title')} {/* Use i18n */}
+                    </span>
+                    <span className="text-sm text-zinc-400">{t('symptoms.modelSource')}</span> {/* Use i18n */}
                 </div>
-              )}
+            </div>
 
-              {/* Message Bubble */}
-              <div className={`max-w-[90%] md:max-w-[85%] space-y-2 ${m.role === 'user' ? 'order-first' : ''}`}>
-                <div className={`text-[15px] leading-relaxed rounded-2xl p-0 ${m.role === 'user'
-                  ? 'bg-gray-100 text-gray-900 px-4 py-2.5 rounded-tr-sm'
-                  : 'text-gray-900 bg-transparent'
-                  }`}>
-                  {m.isAnalysis ? (
-                    <div className="overflow-hidden">
-                      <AIAnalysisResult analysis={m.content} timestamp={m.timestamp} />
-                      {m.modelSource && (
-                        <div className="mt-2 text-xs text-gray-400 text-right">Model: {m.modelSource}</div>
-                      )}
+            {/* Chat Area */}
+            <div className="flex-1 overflow-y-auto">
+                <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+                    {messages.map((msg, index) => (
+                        <div key={msg.id || index} className="flex gap-4 sm:gap-6">
+                            {/* Avatar */}
+                            <div className="shrink-0 flex flex-col items-center">
+                                {msg.role === 'user' ? (
+                                    <div className="w-8 h-8 rounded-full bg-zinc-200 grid place-items-center text-zinc-500">
+                                        <FaUser className="text-sm" />
+                                    </div>
+                                ) : (
+                                    <div className={`w-8 h-8 rounded-full grid place-items-center text-white ${msg.isError ? 'bg-red-500' : 'bg-green-600'}`}>
+                                        <FaStethoscope className="text-sm" />
+                                    </div>
+                                )}
+                            </div>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0 space-y-1">
+                                <div className="font-semibold text-sm text-zinc-900">
+                                    {msg.role === 'user' ? t('symptoms.you') : t('symptoms.assistant')} {/* Use i18n */}
+                                </div>
+
+                                <div className={`prose prose-zinc max-w-none text-[15px] leading-7 ${msg.role === 'user' ? 'text-zinc-800' : 'text-zinc-800'}`}>
+                                    {msg.role === 'user' ? (
+                                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                                    ) : (
+                                        <AIAnalysisResult analysis={msg.content} /> // Use helper component with Markdown
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                    {isLoading && (
+                        <div className="flex gap-4 sm:gap-6">
+                            <div className="w-8 h-8 rounded-full bg-green-600 grid place-items-center text-white shrink-0">
+                                <FaStethoscope className="text-sm animate-pulse" />
+                            </div>
+                            <div className="flex-1 py-1">
+                                <div className="flex gap-1.5 items-center">
+                                    <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                    <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                    <div className="w-2 h-2 bg-zinc-300 rounded-full animate-bounce"></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} className="h-4" />
+                </div>
+            </div>
+
+            {/* Input Area */}
+            <div className="bg-white">
+                <div className="max-w-3xl mx-auto px-4 pb-6 pt-2">
+                    {voiceStatus && (
+                        <div className="text-xs text-blue-600 mb-2 font-medium animate-pulse text-center">{voiceStatus}</div>
+                    )}
+
+                    <div className="relative flex items-end gap-2 bg-zinc-50 p-3 rounded-3xl border border-zinc-200 focus-within:border-zinc-300 focus-within:ring-1 focus-within:ring-zinc-200 shadow-sm transition-all">
+                        <button
+                            onClick={toggleVoice}
+                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors mb-0.5 ${isListening ? 'bg-red-100 text-red-600 animate-pulse' : 'hover:bg-zinc-200 text-zinc-500'}`}
+                            title={isListening ? t('symptoms.voiceStop') : t('symptoms.voiceStart')}
+                        >
+                            {isListening ? <FaStop className="text-xs" /> : <FaMicrophone className="text-sm" />}
+                        </button>
+
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={t('symptoms.placeholder')}
+                            rows={1}
+                            className="flex-1 bg-transparent border-0 focus:ring-0 resize-none py-1.5 max-h-48 text-base text-zinc-800 placeholder:text-zinc-400"
+                            style={{ minHeight: '24px' }}
+                        />
+
+                        <button
+                            onClick={handleSendMessage}
+                            disabled={!input.trim() || isLoading}
+                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all mb-0.5 ${!input.trim() || isLoading
+                                ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                                : 'bg-black text-white hover:bg-zinc-800'
+                                }`}
+                        >
+                            {isLoading ? <div className="w-3 h-3 border-2 border-zinc-400 border-t-white rounded-full animate-spin" /> : <FaPaperPlane className="text-xs" />}
+                        </button>
                     </div>
-                  ) : (
-                    <div className={`${m.isError ? 'text-red-600' : ''}`}>{m.text}</div>
-                  )}
+
+                    <div className="text-center mt-3">
+                        <p className="text-[11px] text-zinc-400">
+                            {t('symptoms.disclaimer')} {/* Use i18n */}
+                        </p>
+                    </div>
                 </div>
-              </div>
             </div>
-          ))}
 
-          {isLoading && (
-            <div className="flex gap-3 md:gap-4 justify-start animate-fade-in">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white grid place-items-center shadow-sm mt-1">
-                <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="flex items-center gap-1.5 h-8">
-                <span className="w-2 h-2 rounded-full bg-gray-300 animate-bounce"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300 animate-bounce delay-150"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300 animate-bounce delay-300"></span>
-              </div>
-            </div>
-          )}
+            {/* Emergency Modal (Adapted from i18n-integration) */}
+            {showEmergencyModal && (
+                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border-l-4 border-red-600">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <div className="text-sm uppercase font-bold text-red-600 tracking-wider">{t('symptoms.urgencyTitle')}</div>
+                                <h3 className="text-xl font-bold text-gray-900 mt-1">{t('symptoms.actionRecommended')}</h3>
+                                <p className="text-sm text-gray-600 mt-1">{t('symptoms.basedOnSeverity')} <b>{detectedSeverity}</b> {t('symptoms.symptoms')}.</p>
+                            </div>
+                            <button onClick={() => setShowEmergencyModal(false)} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg">✕</button>
+                        </div>
 
-          <div ref={messagesEndRef} className="h-4" />
+                        <div className="grid grid-cols-1 gap-2 pt-2">
+                            <button
+                                onClick={triggerEmergencyNavigation}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-md transition-transform active:scale-[0.98]"
+                            >
+                                <span className="text-lg">🏥</span> {t('symptoms.buttonNavigate')}
+                            </button>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => callNumber('108')}
+                                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-700 font-semibold hover:bg-red-100 border border-red-100"
+                                >
+                                    <span>📞</span> {t('symptoms.buttonCall108')}
+                                </button>
+                                <button
+                                    onClick={() => callNumber('104')}
+                                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 border border-emerald-100"
+                                >
+                                    <span>👩‍⚕️</span> {t('symptoms.buttonCallAsha')}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="text-center pt-2">
+                            <button onClick={() => setShowEmergencyModal(false)} className="text-xs text-gray-400 underline hover:text-gray-600">{t('symptoms.continueChatting')}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-
-      {/* Input Area - Fixed Bottom */}
-      <div className="shrink-0 p-4 bg-white/80 backdrop-blur border-t border-gray-100 absolute bottom-0 w-full md:static">
-        <div className="max-w-3xl mx-auto relative">
-          <textarea
-            value={isListening ? (voiceStatus.startsWith('Listening:') ? voiceStatus.replace('Listening: ', '') : symptom) : symptom}
-            onChange={(e) => setSymptom(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                if (!isLoading && symptom.trim()) handleSymptomCheck()
-              }
-            }}
-            rows={1}
-            placeholder="Describe your symptoms..."
-            disabled={isLoading || isListening}
-            className="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-gray-200 shadow-sm focus:border-gray-300 focus:ring-0 resize-none bg-gray-50 text-base max-h-32 focus:bg-white transition-colors custom-scrollbar"
-            style={{ minHeight: '52px' }}
-          />
-
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            {/* Voice Button */}
-            <button
-              onClick={isListening ? stopVoiceInput : startVoiceInput}
-              className={`p-2 rounded-full transition-all ${isListening
-                ? 'bg-red-50 text-red-600 animate-pulse'
-                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
-                }`}
-              title={isListening ? "Stop listening" : "Start voice input"}
-            >
-              {isListening ? <FaStop size={14} /> : <FaMicrophone size={16} />}
-            </button>
-
-            {/* Send Button */}
-            <button
-              onClick={() => handleSymptomCheck()}
-              disabled={!symptom.trim() || isLoading}
-              className={`p-2 rounded-full transition-all ${symptom.trim() && !isLoading
-                ? 'bg-black text-white hover:bg-gray-800 shadow-sm'
-                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                }`}
-              title="Send message"
-            >
-              <FaPaperPlane size={14} />
-            </button>
-          </div>
-        </div>
-
-        <div className="text-center mt-2.5">
-          <p className="text-[11px] text-gray-400">
-            Jansehat AI can make mistakes. Please consult a doctor for serious concerns.
-          </p>
-        </div>
-      </div>
-
-      {/* Emergency Modal */}
-      {showEmergencyModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border-l-4 border-red-600">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-sm uppercase font-bold text-red-600 tracking-wider">High Urgency Detected</div>
-                <h3 className="text-xl font-bold text-gray-900 mt-1">Immediate Action Recommended</h3>
-                <p className="text-sm text-gray-600 mt-1">Based on "<b>{detectedSeverity}</b>" symptoms.</p>
-              </div>
-              <button onClick={() => setShowEmergencyModal(false)} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg">✕</button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2 pt-2">
-              <button
-                onClick={triggerEmergencyNavigation}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-md transition-transform active:scale-[0.98]"
-              >
-                <span className="text-lg">🏥</span> Navigate to Hospital
-              </button>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => callNumber('108')}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-700 font-semibold hover:bg-red-100 border border-red-100"
-                >
-                  <span>📞</span> Call 108
-                </button>
-                <button
-                  onClick={() => callNumber('104')}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 border border-emerald-100"
-                >
-                  <span>👩‍⚕️</span> Call ASHA
-                </button>
-              </div>
-            </div>
-            <div className="text-center pt-2">
-              <button onClick={() => setShowEmergencyModal(false)} className="text-xs text-gray-400 underline hover:text-gray-600">I understand, continue chatting</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+    )
 }
 
 export default SymptomChecker
