@@ -11,7 +11,9 @@ class AIService {
     this.minRequestInterval = 3000; // 3 seconds between requests (increased for quota management)
     this.modelUsage = new Map(); // Track model usage for smart selection
     this.initializeAI();
-    this.localLLMUrl = 'http://localhost:11434/v1/chat/completions'; // Default Ollama endpoint
+    this.initializeAI();
+    // Allow configuration via ENV for tunneling (e.g. ngrok)
+    this.localLLMUrl = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434/v1/chat/completions';
     this.localModel = 'qwen2.5:latest';
   }
 
@@ -140,7 +142,33 @@ This is general guidance only. Always consult with qualified healthcare professi
   }
 
   // NEW: Local LLM Support (Ollama / Qwen)
-  async analyzeSymptomsLocal(messages) {
+  // Main entry point for Symptom Analysis (Local with Fallback)
+  async analyzeSymptomsLocal(messages, onChunk = null) {
+    try {
+      return await this.tryLocalLLM(messages, onChunk);
+    } catch (localError) {
+      console.warn('Local LLM unavailable, falling back to Gemini:', localError);
+
+      try {
+        if (!this.isConfigured) {
+          throw new Error("Gemini API not configured for fallback.");
+        }
+        return await this.analyzeSymptomsGemini(messages, onChunk);
+      } catch (geminiError) {
+        console.error('All AI services failed:', geminiError);
+        throw geminiError;
+      }
+    }
+  }
+
+  // Private: Try Local LLM
+  async tryLocalLLM(messages, onChunk) {
+    const isStreaming = typeof onChunk === 'function';
+
+    // Add a timeout to fail fast if local LLM is down
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout for local check
+
     try {
       const response = await fetch(this.localLLMUrl, {
         method: 'POST',
@@ -150,23 +178,117 @@ This is general guidance only. Always consult with qualified healthcare professi
         body: JSON.stringify({
           model: this.localModel,
           messages: messages,
-          stream: false // Simpler to handle for now
+          stream: isStreaming
         }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Local LLM Error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      if (isStreaming) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let fullResponse = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n").filter(line => line.trim() !== "");
+
+          for (const line of lines) {
+            if (line.trim() === "data: [DONE]") continue;
+
+            if (line.startsWith("data: ")) {
+              try {
+                const json = JSON.parse(line.substring(6));
+                const content = json.choices?.[0]?.delta?.content || "";
+                if (content) {
+                  fullResponse += content;
+                  onChunk(content);
+                }
+              } catch (e) {
+                console.warn("Error parsing stream chunk", e);
+              }
+            }
+          }
+        }
+
+        return {
+          success: true,
+          analysis: fullResponse,
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        // Non-streaming fallback
+        const data = await response.json();
+        return {
+          success: true,
+          analysis: data.choices[0].message.content,
+          timestamp: new Date().toISOString()
+        };
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  }
+
+  // Private: Gemini Implementation
+  async analyzeSymptomsGemini(messages, onChunk) {
+    const isStreaming = typeof onChunk === 'function';
+    await this.waitForRateLimit();
+
+    // Convert messages to context + prompt
+    const lastUserMsg = messages[messages.length - 1].content;
+    const historyText = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n');
+
+    const bestModel = this.getBestAvailableModel();
+    console.log(`Using Fallback Model: ${bestModel}`);
+
+    const model = this.genAI.getGenerativeModel({ model: bestModel });
+
+    const prompt = `
+      You are an AI Health Assistant.
+      
+      Previous Context:
+      ${historyText}
+
+      User's current query: ${lastUserMsg}
+      
+      Provide a helpful, medical structure response (using Markdown).
+      Keep it professional but accessible.
+    `;
+
+    if (isStreaming) {
+      const result = await model.generateContentStream(prompt);
+      let fullText = '';
+
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        fullText += chunkText;
+        onChunk(chunkText);
+      }
+
+      this.trackModelUsage(bestModel, true);
       return {
         success: true,
-        analysis: data.choices[0].message.content,
+        analysis: fullText,
         timestamp: new Date().toISOString()
       };
-    } catch (error) {
-      console.error('Local LLM failed:', error);
-      throw error;
+    } else {
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      this.trackModelUsage(bestModel, true);
+      return {
+        success: true,
+        analysis: text,
+        timestamp: new Date().toISOString()
+      };
     }
   }
 
