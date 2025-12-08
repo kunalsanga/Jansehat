@@ -183,7 +183,7 @@ function SymptomChecker() {
           <span className="text-zinc-800 font-semibold px-2 py-1 rounded hover:bg-zinc-100 cursor-pointer transition-colors">
             Jansehat AI
           </span>
-          <span className="text-sm text-zinc-400">Health Assistant</span>
+          <span className="text-sm text-zinc-400">Local Model</span>
         </div>
       </div>
 

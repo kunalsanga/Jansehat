@@ -11,9 +11,7 @@ class AIService {
     this.minRequestInterval = 3000; // 3 seconds between requests (increased for quota management)
     this.modelUsage = new Map(); // Track model usage for smart selection
     this.initializeAI();
-    this.initializeAI();
-    // Allow configuration via ENV for tunneling (e.g. ngrok)
-    this.localLLMUrl = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434/v1/chat/completions';
+    this.localLLMUrl = 'http://localhost:11434/v1/chat/completions'; // Default Ollama endpoint
     this.localModel = 'qwen2.5:latest';
   }
 
@@ -142,34 +140,10 @@ This is general guidance only. Always consult with qualified healthcare professi
   }
 
   // NEW: Local LLM Support (Ollama / Qwen)
-  // Main entry point for Symptom Analysis (Local with Fallback)
   async analyzeSymptomsLocal(messages, onChunk = null) {
     try {
-      return await this.tryLocalLLM(messages, onChunk);
-    } catch (localError) {
-      console.warn('Local LLM unavailable, falling back to Gemini:', localError);
+      const isStreaming = typeof onChunk === 'function';
 
-      try {
-        if (!this.isConfigured) {
-          throw new Error("Gemini API not configured for fallback.");
-        }
-        return await this.analyzeSymptomsGemini(messages, onChunk);
-      } catch (geminiError) {
-        console.error('All AI services failed:', geminiError);
-        throw geminiError;
-      }
-    }
-  }
-
-  // Private: Try Local LLM
-  async tryLocalLLM(messages, onChunk) {
-    const isStreaming = typeof onChunk === 'function';
-
-    // Add a timeout to fail fast if local LLM is down
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout for local check
-
-    try {
       const response = await fetch(this.localLLMUrl, {
         method: 'POST',
         headers: {
@@ -180,9 +154,7 @@ This is general guidance only. Always consult with qualified healthcare professi
           messages: messages,
           stream: isStreaming
         }),
-        signal: controller.signal
       });
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Local LLM Error: ${response.statusText}`);
@@ -233,62 +205,8 @@ This is general guidance only. Always consult with qualified healthcare professi
         };
       }
     } catch (error) {
-      clearTimeout(timeoutId);
+      console.error('Local LLM failed:', error);
       throw error;
-    }
-  }
-
-  // Private: Gemini Implementation
-  async analyzeSymptomsGemini(messages, onChunk) {
-    const isStreaming = typeof onChunk === 'function';
-    await this.waitForRateLimit();
-
-    // Convert messages to context + prompt
-    const lastUserMsg = messages[messages.length - 1].content;
-    const historyText = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n');
-
-    const bestModel = this.getBestAvailableModel();
-    console.log(`Using Fallback Model: ${bestModel}`);
-
-    const model = this.genAI.getGenerativeModel({ model: bestModel });
-
-    const prompt = `
-      You are an AI Health Assistant.
-      
-      Previous Context:
-      ${historyText}
-
-      User's current query: ${lastUserMsg}
-      
-      Provide a helpful, medical structure response (using Markdown).
-      Keep it professional but accessible.
-    `;
-
-    if (isStreaming) {
-      const result = await model.generateContentStream(prompt);
-      let fullText = '';
-
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        fullText += chunkText;
-        onChunk(chunkText);
-      }
-
-      this.trackModelUsage(bestModel, true);
-      return {
-        success: true,
-        analysis: fullText,
-        timestamp: new Date().toISOString()
-      };
-    } else {
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      this.trackModelUsage(bestModel, true);
-      return {
-        success: true,
-        analysis: text,
-        timestamp: new Date().toISOString()
-      };
     }
   }
 
@@ -415,27 +333,33 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
       const nowPathHints = ['/records', '/symptoms', '/video', '/emergency', '/medicine', '/navigation'];
 
       const prompt = `
-You are an intent classification engine for a healthcare web app. Your task is to read the user's spoken command and output a STRICT JSON object describing the app action.
+You are an intent classification engine for a healthcare web app. Your task is to listen to the user and output a STRICT JSON object.
 
 Rules:
-- The user may speak in ANY language. Detect the language and interpret intent.
-- Map the command to one of these actions exactly:
-  OPEN_HOME, OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION, UNKNOWN
-- Include optional parameters when relevant (e.g., destination for navigation, medicine name, etc.).
-- Return ONLY JSON. No markdown, no explanation.
+1. Detect the user's language.
+2. Interpret the intent and map it to one of these actions:
+   - OPEN_HOME, OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION
+   - CHAT (for greetings, questions, or unclear commands that behave like conversation)
+   - UNKNOWN (completely unintelligible)
+3. Generate a natural, friendly "responseText" in the SAME language as the user.
+   - For navigation: Confirm the action (e.g., "Opening Symptom Checker").
+   - For CHAT: Reply naturally (e.g., "Hello! How can I help you?").
+   - For UNKNOWN: Politely ask to repeat.
+4. Return ONLY JSON.
 
 JSON schema:
 {
-  "action": "OPEN_HOME | OPEN_HEALTH_RECORDS | OPEN_EMERGENCY | OPEN_SYMPTOM_CHECKER | OPEN_VIDEO_CONSULTATION | OPEN_MEDICINE | OPEN_NAVIGATION | UNKNOWN",
-  "confidence": 0.0, // 0-1
-  "parameters": { "medicine": string | undefined, "destination": string | undefined },
-  "detectedLanguage": string,
-  "responseText": string // Response in the same language as user input
+  "action": "String (one of the actions above)",
+  "confidence": Number, // 0-1
+  "parameters": { "medicine": string, "destination": string },
+  "detectedLanguage": "String (Language Name)",
+  "languageCode": "String (BCP 47 code e.g. en-US, hi-IN, pa-IN)",
+  "responseText": "String (The spoken response)"
 }
 
 Context:
-- Available routes: ${nowPathHints.join(', ')}
-- User locale preference: ${locale}
+- User locale: ${locale}
+- App Features: Health Records, Emergency SOS, Symptom Checker, Video Consult, Medicine Finder, Hospital Nav.
 
 User said: "${transcript}"
 `;
