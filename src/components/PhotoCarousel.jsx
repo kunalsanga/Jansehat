@@ -36,9 +36,8 @@ function PhotoCarousel() {
             <img
               src={src}
               alt={`Healthcare Image ${idx + 1}`}
-              className={`h-full w-full rounded-md sm:rounded-lg object-cover shadow-sm transition-opacity duration-300 ${
-                loadedImages.has(src) ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`h-full w-full rounded-md sm:rounded-lg object-cover shadow-sm transition-opacity duration-300 ${loadedImages.has(src) ? 'opacity-100' : 'opacity-0'
+                }`}
               loading="lazy"
               onLoad={() => handleImageLoad(src)}
             />
@@ -51,19 +50,7 @@ function PhotoCarousel() {
         ))}
       </div>
 
-      {/* Add Tailwind CSS animation */}
-      <style>
-{`
-  @keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  .animate-scroll {
-    display: flex;
-    animation: scroll 35s linear infinite; /* Medium speed scroll */
-  }
-`}
-</style>
+      {/* CSS is now in App.css */}
 
 
     </div>

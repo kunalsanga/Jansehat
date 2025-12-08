@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom'
 function MobileTabBar() {
   const { t } = useTranslation()
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-20 bg-white/95 backdrop-blur border-t border-zinc-200 lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur border-t border-zinc-200 lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="grid grid-cols-5 text-xs pb-2">
         <NavLink
           to="/home"

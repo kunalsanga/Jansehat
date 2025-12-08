@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import './AshaCalendar.css'
 
 export default function GlobalNotifier() {
@@ -7,11 +8,11 @@ export default function GlobalNotifier() {
 
   // Only show notifier inside the patient UI (we treat '/home' as patient dashboard).
   // Do not render on login, ASHA, pharmacist or other pages.
-  const isBrowser = typeof window !== 'undefined' && window.location
-  if (isBrowser) {
-    const path = window.location.pathname || ''
-    if (!path.startsWith('/home')) return null
-  }
+  /* Use useLocation for reactive updates on route change */
+  const location = useLocation()
+  const visiblePath = location.pathname.startsWith('/home')
+
+  if (!visiblePath) return null
 
   useEffect(() => {
     function readFromStorage() {
@@ -43,7 +44,7 @@ export default function GlobalNotifier() {
       const src = (payload.sender || payload.source || payload.from || payload.role || payload.type || '').toString().toLowerCase()
       const isAsha = src.includes('asha') || src.includes('ashadidi') || src.includes('asha_didi')
       if (!isAsha) return
-      setNotifications(prev => [payload, ...prev].slice(0,50))
+      setNotifications(prev => [payload, ...prev].slice(0, 50))
       setVisible(payload)
     }
 
