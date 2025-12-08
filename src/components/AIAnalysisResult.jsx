@@ -1,6 +1,6 @@
 import React from 'react';
 
-function AIAnalysisResult({ analysis, timestamp }) {
+function AIAnalysisResult({ analysis = '', timestamp }) {
   // Parse the AI analysis text into structured sections
   const parseAnalysis = (text) => {
     const sections = [];

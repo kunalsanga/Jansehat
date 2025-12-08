@@ -55,6 +55,8 @@ const STATIC_MAP_KEY = import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY || ''
 
 function RecenterOnNabha() {
     const map = useMap()
+    // NOTE: This component is only used to center on NABHA_COORDS if geolocation fails 
+    // or before the user's location is detected.
     useEffect(() => {
         map.setView([NABHA_COORDS.lat, NABHA_COORDS.lng], 13)
     }, [map])
@@ -67,7 +69,8 @@ function HospitalNavigation() {
     const apiBase = getApiBaseUrl()
     const emergencyTriggeredRef = useRef(false)
     const [searchQuery, setSearchQuery] = useState('')
-    const [selectedType, setSelectedType] = useState('all')
+    // MODIFIED: Set default selectedType to 'pharmacy'
+    const [selectedType, setSelectedType] = useState('pharmacy') 
     const [currentPosition, setCurrentPosition] = useState(null)
     const [routeDestination, setRouteDestination] = useState(null)
     const [destinationQuery, setDestinationQuery] = useState('')
@@ -84,6 +87,9 @@ function HospitalNavigation() {
     const [staticReason, setStaticReason] = useState('')
     const [googleRoutePoints, setGoogleRoutePoints] = useState([])
     const googleLayerRef = useRef(null)
+    // MODIFIED: Set fetchCenter to null initially, relying on geolocation to set it.
+    const [fetchCenter, setFetchCenter] = useState(null); 
+
 
     // Detect low-bandwidth connections to switch to static maps gracefully
     useEffect(() => {
@@ -172,7 +178,10 @@ function HospitalNavigation() {
 
     const fetchGoogleNearby = React.useCallback(async () => {
         try {
-            const base = currentPosition || NABHA_COORDS
+            // MODIFIED 3: Use fetchCenter for the API base location for dynamic searching, fallback to NABHA_COORDS
+            const base = fetchCenter || NABHA_COORDS;
+            
+            // Fetch based on selected type (now only hospital or pharmacy)
             const typesToFetch = selectedType === 'all' ? ['hospital', 'pharmacy'] : [selectedType]
             const radius = 7000
 
@@ -208,7 +217,7 @@ function HospitalNavigation() {
             console.warn('Google Places fetch failed, falling back to OSM only', error)
             setGoogleFacilities([])
         }
-    }, [apiBase, currentPosition, selectedType])
+    }, [apiBase, fetchCenter, selectedType]) 
 
     useEffect(() => {
         fetchGoogleNearby()
@@ -267,22 +276,86 @@ function HospitalNavigation() {
         }
     }
 
+// --------------------------------------------------------------------------------------
+// GOOGLE MAPS URL FUNCTIONS
+// --------------------------------------------------------------------------------------
+
 const getGoogleMapEmbedUrl = (coords) => {
     if (!coords) return null
-    return `https://www.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`
+    return `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`
 }
 
 const getGoogleDirectionsUrl = (origin, destination) => {
     if (!destination) return null
-    const dest = `${destination.lat},${destination.lng}`
-    const originPart = origin ? `&origin=${origin.lat},${origin.lng}` : ''
-    return `https://www.google.com/maps/dir/?api=1&destination=${dest}${originPart}`
+    
+    const destPart = `${destination.lat},${destination.lng}`
+    
+    const originCoords = currentPosition || NABHA_COORDS; 
+    const originPart = originCoords ? `${originCoords.lat},${originCoords.lng}` : 'Current+Location'; 
+    
+    return `https://www.google.com/maps/dir/${originPart}/${destPart}`;
 }
 
 const getStaticMapUrl = (coords) => {
     if (!coords || !STATIC_MAP_KEY) return ''
     return `https://maps.googleapis.com/maps/api/staticmap?center=${coords.lat},${coords.lng}&zoom=14&size=640x320&markers=color:red|${coords.lat},${coords.lng}&key=${STATIC_MAP_KEY}`
 }
+
+// --------------------------------------------------------------------------------------
+// NEW FUNCTION: Focus on Pharmacies near a specific hospital
+// --------------------------------------------------------------------------------------
+
+const focusOnPharmacies = (hospitalCoords) => {
+    // 1. Set the filter type to show only pharmacies
+    setSelectedType('pharmacy'); 
+    
+    // 2. Set the fetch center to the hospital's coordinates
+    setFetchCenter(hospitalCoords); 
+    
+    // 3. Clear any existing route/destination, and center the map on the new location
+    clearRoute();
+    try {
+        if (mapRef.current) {
+            // Fly to the new search center (the hospital location)
+            mapRef.current.flyTo([hospitalCoords.lat, hospitalCoords.lng], 15);
+        }
+    } catch (_) {}
+};
+
+    // MODIFIED 4: Geolocation effect to set currentPosition and fetchCenter
+    useEffect(() => {
+        if (!navigator.geolocation) {
+            // Fallback if geolocation is unavailable
+            setFetchCenter(NABHA_COORDS); 
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+                setCurrentPosition(coords)
+                
+                // Set the initial fetch center to the user's location
+                setFetchCenter(coords); 
+                
+                // Also center the map to the current position immediately if map is ready
+                if (mapRef.current) {
+                     mapRef.current.setView([coords.lat, coords.lng], 15);
+                }
+            },
+            () => {
+                // If geolocation fails (e.g., user denies), fall back to Nabha
+                setCurrentPosition(null)
+                setFetchCenter(NABHA_COORDS); 
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+        )
+    }, []) // Empty dependency array ensures this runs only once
+
+// --------------------------------------------------------------------------------------
+// END MODIFIED GEOLOCATION
+// --------------------------------------------------------------------------------------
+
 
     const handleNavigation = (facility) => {
         setSelectedFacility(facility)
@@ -345,26 +418,18 @@ const getStaticMapUrl = (coords) => {
         setSelectedFacility(null)
         setRouteInstructions([])
         setGoogleRoutePoints([])
+        // Reset fetch center to user's location or default Nabha on clear
+        setFetchCenter(currentPosition || NABHA_COORDS); 
+        if (mapRef.current) {
+             mapRef.current.setView([fetchCenter.lat, fetchCenter.lng], 13); // Recenter map 
+        }
         if (routeLineRef.current && mapRef.current) {
             mapRef.current.removeLayer(routeLineRef.current)
             routeLineRef.current = null
         }
     }
 
-    useEffect(() => {
-        if (!navigator.geolocation) return
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-                setCurrentPosition(coords)
-            },
-            () => {
-                setCurrentPosition(null)
-            },
-            { enableHighAccuracy: true, timeout: 5000 }
-        )
-    }, [])
-
+    
     // Draw / clear Google polyline on Leaflet map
     useEffect(() => {
         if (!mapRef.current) return
@@ -485,34 +550,55 @@ const getStaticMapUrl = (coords) => {
                     )}
                     <MapContainer className={useStaticMap ? 'opacity-30 pointer-events-none' : ''} whenCreated={(map)=>{mapRef.current=map; if (!googleLayerRef.current) { googleLayerRef.current = L.layerGroup().addTo(map) } }} center={[NABHA_COORDS.lat, NABHA_COORDS.lng]} zoom={13} style={{ height: '100%', width: '100%' }}>
                         <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                        <RecenterOnNabha />
-                        {!googleRoutePoints.length && <RoutingControl from={currentPosition} to={routeDestination} />}
+                        {/* Only use RecenterOnNabha if currentPosition hasn't been set yet */}
+                        {!currentPosition && <RecenterOnNabha />}
                         {currentPosition && (
                             <Marker icon={ICONS.user} position={[currentPosition.lat, currentPosition.lng]}>
                                 <Popup>Your location</Popup>
                             </Marker>
                         )}
-                        {filteredFacilities.map((f) => (
-                            <Marker eventHandlers={{ click: () => handleNavigation(f) }} icon={ICONS[f.type] || ICONS.hospital} key={f.id} position={[f.coordinates.lat, f.coordinates.lng]}>
-                                <Popup>
-                                    <div className="space-y-2">
-                                        <div className="font-semibold">{f.name}</div>
-                                        <div className="text-xs text-zinc-600">{f.address}</div>
-                                        {f.rating && <div className="text-xs text-amber-600">⭐ {f.rating}</div>}
-                                        <div className="flex flex-col gap-1">
-                                            <button onClick={() => handleNavigation(f)} className="px-2 py-1 bg-blue-500 text-white rounded text-xs">Navigate</button>
-                                            <button onClick={() => {
-                                                const url = getGoogleDirectionsUrl(currentPosition || NABHA_COORDS, f.coordinates)
-                                                if (url) window.open(url, '_blank', 'noopener,noreferrer')
-                                            }} className="px-2 py-1 border border-blue-200 text-blue-700 rounded text-xs">Open in Google Maps</button>
+                        {/* Wrapper with dynamic key to ensure map markers update on filter change */}
+                        <React.Fragment key={selectedType}>
+                            {filteredFacilities.map((f) => (
+                                <Marker 
+                                    eventHandlers={{ 
+                                        click: () => {
+                                            // 1. Update internal state (Centers map, highlights destination)
+                                            handleNavigation(f);
+                                            
+                                            // 2. Immediately calculate and open the Google Maps URL in a new tab
+                                            const url = getGoogleDirectionsUrl(currentPosition || NABHA_COORDS, f.coordinates);
+                                            if (url) {
+                                                window.open(url, '_blank', 'noopener,noreferrer');
+                                            }
+                                        }
+                                    }} 
+                                    icon={ICONS[f.type] || ICONS.hospital} 
+                                    key={f.id} 
+                                    position={[f.coordinates.lat, f.coordinates.lng]}
+                                >
+                                    <Popup>
+                                        <div className="space-y-2">
+                                            <div className="font-semibold">{f.name}</div>
+                                            <div className="text-xs text-zinc-600">{f.address}</div>
+                                            {f.rating && <div className="text-xs text-amber-600">⭐ {f.rating}</div>}
+                                            <div className="flex flex-col gap-1">
+                                                {/* This button still triggers the internal routing logic */}
+                                                <button onClick={() => handleNavigation(f)} className="px-2 py-1 bg-blue-500 text-white rounded text-xs">Navigate</button>
+                                                {/* Keep this button for explicit Google Maps opening if user prefers the popup button */}
+                                                <button onClick={() => {
+                                                    const url = getGoogleDirectionsUrl(currentPosition || NABHA_COORDS, f.coordinates)
+                                                    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+                                                }} className="px-2 py-1 border border-blue-200 text-blue-700 rounded text-xs">Open in Google Maps</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </Popup>
-                            </Marker>
-                        ))}
+                                    </Popup>
+                                </Marker>
+                            ))}
+                        </React.Fragment>
                     </MapContainer>
                 </div>
             </div>
@@ -529,15 +615,14 @@ const getStaticMapUrl = (coords) => {
                             className="w-full px-4 py-3 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         />
                     </div>
+                    {/* MODIFIED 3: Simplified filter options (Hospitals, Pharmacies only) */}
                     <select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
                         className="px-4 py-3 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     >
-                        <option value="all">{t('nav.allTypes')}</option>
                         <option value="hospital">{t('nav.hospitals')}</option>
                         <option value="pharmacy">{t('nav.pharmacies')}</option>
-                        <option value="diagnostic">{t('nav.diagnostics')}</option>
                     </select>
                 </div>
             </div>
@@ -548,7 +633,7 @@ const getStaticMapUrl = (coords) => {
                     <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">📍</div>
                     <div>
                         <h3 className="font-semibold text-blue-800">{t('nav.currentLocation')}</h3>
-                        <p className="text-sm text-blue-700">{t('nav.detectingLocation')}</p>
+                        <p className="text-sm text-blue-700">{currentPosition ? `Location detected at ${currentPosition.lat.toFixed(4)}, ${currentPosition.lng.toFixed(4)}` : t('nav.detectingLocation')}</p>
                     </div>
                 </div>
             </div>
@@ -563,6 +648,7 @@ const getStaticMapUrl = (coords) => {
                     <button
                         disabled={!routeDestination && !selectedFacility}
                         onClick={() => {
+                            // Uses currently selected destination for navigation, whether it's a hospital or pharmacy
                             const url = getGoogleDirectionsUrl(currentPosition, routeDestination || selectedFacility?.coordinates || NABHA_COORDS)
                             if (url) window.open(url, '_blank', 'noopener,noreferrer')
                         }}
@@ -619,6 +705,16 @@ const getStaticMapUrl = (coords) => {
                         </div>
 
                         <div className="mb-3">
+                            {/* NEW BUTTON: Only show 'View Pharmacies' button for Hospitals */}
+                            {facility.type === 'hospital' && (
+                                <button
+                                    onClick={() => focusOnPharmacies(facility.coordinates)}
+                                    className="mb-3 px-3 py-2 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600 transition w-full text-center"
+                                >
+                                    💊 View Pharmacies Near This Location
+                                </button>
+                            )}
+
                             <div className="flex flex-wrap gap-1">
                                 {facility.specialties.map((specialty, index) => (
                                     <span key={index} className="px-2 py-1 bg-zinc-100 text-zinc-700 text-xs rounded-full">

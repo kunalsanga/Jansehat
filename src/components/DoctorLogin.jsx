@@ -60,7 +60,7 @@ function DoctorLogin() {
 
     if (validateForm()) {
       console.log('Form submitted:', formData)
-      // Here you would typically send the data to your backend
+      // KEEPING main branch logic: Direct to dashboard with login message
       alert('Welcome back, Doctor!')
       navigate('/doctor/dashboard')
     }
@@ -153,7 +153,7 @@ function DoctorLogin() {
           {/* Hospital Information Section */}
           <div className="border-t pt-6">
             <h2 className="text-lg font-medium text-slate-800 mb-4">Hospital Information <span className="text-red-500">*</span></h2>
-
+            
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -192,7 +192,7 @@ function DoctorLogin() {
           {/* Address Section */}
           <div className="border-t pt-6">
             <h2 className="text-lg font-medium text-slate-800 mb-4">Address <span className="text-red-500">*</span></h2>
-
+            
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
