@@ -34,7 +34,7 @@ function AIAnalysisResult({ analysis, timestamp, modelSource }) {
 function SymptomChecker() {
     const { t } = useTranslation() // KEEP: i18n
     const navigate = useNavigate() // KEEP: useNavigate
-    
+
     // MERGED/ADOPTED STATE from main branch (Conversational Chat Model)
     const [messages, setMessages] = useState([
         {
@@ -49,7 +49,7 @@ function SymptomChecker() {
     const [voiceStatus, setVoiceStatus] = useState('')
     const messagesEndRef = useRef(null)
     const recognitionRef = useRef(null)
-    
+
     // KEEP: Emergency Modal State
     const [showEmergencyModal, setShowEmergencyModal] = useState(false)
     const [detectedSeverity, setDetectedSeverity] = useState('')
@@ -154,9 +154,9 @@ function SymptomChecker() {
 
             // Call Local LLM with streaming
             await aiService.analyzeSymptomsLocal(history, onChunk)
-            
+
             // AFTER STREAM FINISHES: Evaluate Severity
-            evaluateSeverity(fullAnalysisText) 
+            evaluateSeverity(fullAnalysisText)
 
         } catch (error) {
             console.error('Chat error:', error)
@@ -192,7 +192,7 @@ function SymptomChecker() {
         recognition.continuous = false
         recognition.interimResults = true
         // Use current i18n language
-        recognition.lang = t('i18n.localeCode') || 'en-US' 
+        recognition.lang = t('i18n.localeCode') || 'en-US'
 
         recognitionRef.current = recognition
 
@@ -254,7 +254,7 @@ function SymptomChecker() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-white text-zinc-800">
+        <div className="flex flex-col h-[calc(100vh-6rem)] bg-white text-zinc-800">
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-100 bg-white sticky top-0 z-10">
                 <NavLink to="/" className="shrink-0 w-8 h-8 rounded-full hover:bg-zinc-100 grid place-items-center text-zinc-600 transition-colors">←</NavLink>

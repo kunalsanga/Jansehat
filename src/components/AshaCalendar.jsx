@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import './AshaCalendar.css'
 
 const MONTHS = [
-  'January','February','March','April','May','June','July','August','September','October','November','December'
+  'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
 ]
 
 function getMonthMatrix(year, month) {
@@ -53,16 +53,16 @@ export default function AshaCalendar() {
   const events = useMemo(() => {
     // keys: YYYY-MM-DD
     const e = {}
-    const add = (y,m,d,title,desc,type) => {
-      const key = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+    const add = (y, m, d, title, desc, type) => {
+      const key = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
       if (!e[key]) e[key] = []
       e[key].push({ title, desc, type })
     }
-    add(currentYear, currentMonth+1, 5, 'Vaccination Drive', 'Polio and routine immunizations at the community centre, 10AM–2PM', 'vaccination')
-    add(currentYear, currentMonth+1, 12, 'Polio Medication', 'Polio drop at household door-to-door', 'polio')
-    add(currentYear, currentMonth+1, 19, 'Health Camp', 'General health check-up and medicines distribution', 'camp')
+    add(currentYear, currentMonth + 1, 5, 'Vaccination Drive', 'Polio and routine immunizations at the community centre, 10AM–2PM', 'vaccination')
+    add(currentYear, currentMonth + 1, 12, 'Polio Medication', 'Polio drop at household door-to-door', 'polio')
+    add(currentYear, currentMonth + 1, 19, 'Health Camp', 'General health check-up and medicines distribution', 'camp')
     // also add one event for today for easier testing
-    const tKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+    const tKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
     if (!e[tKey]) e[tKey] = []
     e[tKey].push({ title: 'Daily Visit', desc: 'Check on pregnant mothers and newborns', type: 'visit' })
     return e
@@ -124,7 +124,7 @@ export default function AshaCalendar() {
 
   function formatKey(date) {
     if (!date) return null
-    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   }
 
   return (
@@ -133,7 +133,7 @@ export default function AshaCalendar() {
       {emergencies && emergencies.length > 0 && (
         <div className="asha-notifications" aria-live="polite">
           <div className="asha-notifications-header">Emergencies</div>
-          {emergencies.slice(0,5).map((em, idx) => (
+          {emergencies.slice(0, 5).map((em, idx) => (
             <div key={em.ts || idx} className="asha-notification-item">
               <div className="flex items-center justify-between">
                 <div>
@@ -159,7 +159,7 @@ export default function AshaCalendar() {
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold mb-2">
-          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
             <div key={d} className="py-1 text-zinc-700">{d}</div>
           ))}
         </div>
