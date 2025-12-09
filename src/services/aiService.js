@@ -11,7 +11,8 @@ class AIService {
         this.minRequestInterval = 3000; // 3 seconds between requests (increased for quota management)
         this.modelUsage = new Map(); // Track model usage for smart selection
         this.initializeAI();
-        this.localLLMUrl = 'http://localhost:11434/v1/chat/completions'; // Default Ollama endpoint
+        // Use environment variable for Vercel/Production support (Ngrok tunnel)
+        this.localLLMUrl = import.meta.env.VITE_LOCAL_LLM_URL || 'http://localhost:11434/v1/chat/completions';
         this.localModel = 'qwen2.5';
     }
 
