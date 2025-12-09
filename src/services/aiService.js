@@ -11,7 +11,7 @@ class AIService {
         this.minRequestInterval = 3000; // 3 seconds between requests (increased for quota management)
         this.modelUsage = new Map(); // Track model usage for smart selection
         this.initializeAI();
-        this.localLLMUrl = 'http://localhost:11434/v1/chat/completions'; // Default Ollama endpoint
+        this.localLLMUrl = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434/v1/chat/completions'; // Configurable endpoint
         this.localModel = 'qwen2.5';
     }
 
@@ -169,24 +169,24 @@ This is general guidance only. Always consult with qualified healthcare professi
             if (isStreaming) {
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder("utf-8");
-                let fullResponse = "";
+                let buffer = "";
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split("\n").filter(line => line.trim() !== "");
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop() || ""; // Keep incomplete line
 
                     for (const line of lines) {
                         if (line.trim() === "data: [DONE]") continue;
 
-                        if (line.startsWith("data: ")) {
+                        if (line.trim().startsWith("data: ")) {
                             try {
-                                const json = JSON.parse(line.substring(6));
+                                const json = JSON.parse(line.trim().substring(6));
                                 const content = json.choices?.[0]?.delta?.content || "";
                                 if (content) {
-                                    fullResponse += content;
                                     onChunk(content);
                                 }
                             } catch (e) {
@@ -194,6 +194,15 @@ This is general guidance only. Always consult with qualified healthcare professi
                             }
                         }
                     }
+                }
+
+                if (buffer.trim().startsWith("data: ")) {
+                    // Process remaining buffer if any
+                    try {
+                        const json = JSON.parse(buffer.trim().substring(6));
+                        const content = json.choices?.[0]?.delta?.content || "";
+                        if (content) onChunk(content);
+                    } catch (e) { }
                 }
 
                 return {
