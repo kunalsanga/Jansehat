@@ -1,6 +1,5 @@
 package com.sih.telemed.telemedbackend.dto.Rtc;
 
-
 import lombok.*;
 
 @Data
@@ -9,12 +8,13 @@ import lombok.*;
 @Builder
 public class RtcSignalMessage {
 
-    private String type;          // "offer", "answer", "candidate", "end", "chat"
-    private String roomCode;      // which RTC session
-    private Long fromUserId;
-    private Long toUserId;        // optional; often you just broadcast in a room
+    private String type;       // "offer", "answer", "candidate"
+    private String roomCode;
 
-    private String sdp;           // for offer/answer
-    private String candidate;     // for ICE
-    private String chatMessage;   // for chat type
+    private Object offer;      // WebRTC Offer SDP
+    private Object answer;     // WebRTC Answer SDP
+    private Object candidate;  // full ICE candidate JSON
+
+    private Long fromUserId;
+    private Long toUserId;
 }
