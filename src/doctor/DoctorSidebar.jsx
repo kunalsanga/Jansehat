@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 export default function DoctorSidebar() {
   const items = [
     { to: '/doctor/dashboard', label: 'Dashboard' },
+    { to: '/doctor/video-call', label: '🔴 Live Video Call' },
     { to: '/doctor/emergency-calls', label: 'Emergency Patients' },
     { to: '/doctor/todays-appointments', label: "Today's Appointments" },
     { to: '/doctor/video', label: 'Video Recordings' },
@@ -17,10 +18,9 @@ export default function DoctorSidebar() {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-blue-50 text-blue-700 font-semibold'
-                  : 'text-zinc-700 hover:bg-zinc-100'
+              `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
+                ? 'bg-blue-50 text-blue-700 font-semibold'
+                : 'text-zinc-700 hover:bg-zinc-100'
               }`
             }
           >

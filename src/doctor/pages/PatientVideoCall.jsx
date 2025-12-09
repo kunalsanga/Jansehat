@@ -1,67 +1,49 @@
 // src/doctor/pages/PatientVideoCall.jsx
-import React, { useRef, useEffect, useState } from "react";
-import { connectStomp, disconnectStomp } from "../../rtc/rtcClient";
-import { initWebRTC, handleIncomingSignal, closeConnection } from "../../rtc/webrtc";
+import React from 'react';
+import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
+
+// 🔥 Your Secrets
+const APP_ID = 1889844249;
+const SERVER_SECRET = "29b17cf5347cefbd9f5801c547bc597a";
 
 export default function PatientVideoCall() {
-    const localVideoRef = useRef(null);
-    const remoteVideoRef = useRef(null);
-    const [roomCode, setRoomCode] = useState("");
-    const [connected, setConnected] = useState(false);
+    // Get room ID from URL params or default
+    const getUrlParams = (url = window.location.href) => {
+        let urlStr = url.split('?')[1];
+        return new URLSearchParams(urlStr);
+    };
+    const roomID = getUrlParams().get('roomID') || "JanSehatGenericRoom";
 
-    useEffect(() => {
-        // For testing: get room from query param ?room=ROOMCODE or ask prompt
-        const params = new URLSearchParams(window.location.search);
-        const rc = params.get("room") || prompt("Enter room code to join:");
-        if (!rc) {
-            alert("No room code provided");
-            return;
-        }
-        setRoomCode(rc);
+    const myMeeting = async (element) => {
+        // Generate Kit Token
+        const appID = APP_ID;
+        const serverSecret = SERVER_SECRET;
+        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+            appID,
+            serverSecret,
+            roomID,
+            Date.now().toString(),
+            "Anonymous Patient"
+        );
 
-        connectStomp(rc, (msg) => handleIncomingSignal(rc, msg));
+        // Create instance object from Kit Token.
+        const zp = ZegoUIKitPrebuilt.create(kitToken);
 
-        (async () => {
-            try {
-                await initWebRTC(localVideoRef, remoteVideoRef, rc);
-                setConnected(true);
-            } catch (e) {
-                console.error("initWebRTC error", e);
-                alert("Allow camera and microphone and refresh the page");
-            }
-        })();
-
-        return () => {
-            disconnectStomp();
-            closeConnection();
-        };
-    }, []);
+        // Start the call
+        zp.joinRoom({
+            container: element,
+            scenario: {
+                mode: ZegoUIKitPrebuilt.OneONoneCall,
+            },
+            showScreenSharingButton: false,
+        });
+    };
 
     return (
-        <div className="max-w-4xl mx-auto p-4 space-y-4">
-            <h1 className="text-2xl font-semibold">Patient — Join Call</h1>
-
-            <div className="flex gap-6">
-                <div>
-                    <div className="text-sm text-gray-600 mb-1">You (local)</div>
-                    <video ref={localVideoRef} autoPlay muted playsInline style={{ width: 360, height: 270, background: "#000" }} />
-                </div>
-
-                <div>
-                    <div className="text-sm text-gray-600 mb-1">Remote</div>
-                    <video ref={remoteVideoRef} autoPlay playsInline style={{ width: 360, height: 270, background: "#000" }} />
-                </div>
-            </div>
-
-            <div>Room: <span className="font-mono px-2 py-1 bg-gray-100 rounded">{roomCode || "—"}</span></div>
-
-            <div className="text-sm text-gray-600">
-                Waiting for doctor to start the call...
-            </div>
-
-            <button onClick={() => { disconnectStomp(); closeConnection(); }} className="px-3 py-2 bg-red-500 text-white rounded">
-                Leave
-            </button>
-        </div>
+        <div
+            className="myCallContainer"
+            ref={myMeeting}
+            style={{ width: '100vw', height: '100vh' }}
+        ></div>
     );
 }

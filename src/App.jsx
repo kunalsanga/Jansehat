@@ -32,7 +32,10 @@ import AshaSignup from './components/AshaSignup'
 import DoctorSignup from './components/DoctorSignup'
 import PharmacistDashboard from './components/PharmacistDashboard'
 import PharmacistSignup from './components/PharmacistSignup'
-import ConsultationDashboard from './components/ConsulationDashboard'
+// import ConsultationDashboard from './components/ConsulationDashboard' // RELACED BY NEW DOCTOR UI
+
+/* Doctor Module */
+import DoctorLayout from './doctor/DoctorLayout'
 
 /* ⭐ WebRTC pages — CORRECT PATH */
 import DoctorVideoCall from "./doctor/pages/DoctorVideoCall.jsx";
@@ -99,25 +102,25 @@ function Home() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
                     <ServiceCard to="/symptoms" imgSrc="/images/custom/istockphoto-1680653991-612x612.jpg" icon="🩺"
-                                 title={t('home.symptomChecker')} description={t('home.descSymptom')} />
+                        title={t('home.symptomChecker')} description={t('home.descSymptom')} />
 
                     <ServiceCard to="/video" imgSrc="/images/vcDoctor.jpg" icon="📹"
-                                 title={t('home.videoConsultation')} description={t('home.descVideo')} />
+                        title={t('home.videoConsultation')} description={t('home.descVideo')} />
 
                     <ServiceCard to="/records" imgSrc="/health-records.jpg" icon="📄"
-                                 title={t('home.healthRecords')} description={t('home.descRecords')} />
+                        title={t('home.healthRecords')} description={t('home.descRecords')} />
 
                     <ServiceCard to="/medicine" imgSrc="/generated-image (3).png" icon="💊"
-                                 title={t('home.medicineFinder')} description={t('home.descMedicine')} />
+                        title={t('home.medicineFinder')} description={t('home.descMedicine')} />
 
                     <ServiceCard to="/emergency" imgSrc="/images/custom/2021-05-05T115931Z_1_LYNXMPEH440PR_RTROPTP_4_HEALTH-CORONAVIRUS-INDIA.jpg" icon="🚨"
-                                 title={t('home.emergencyMode')} description={t('home.descEmergency')} />
+                        title={t('home.emergencyMode')} description={t('home.descEmergency')} />
 
                     <ServiceCard to="/navigation" imgSrc="/gps-map-navigator-concept-street-maps-directions-vector-illustration_230920-2779.jpg" icon="🗺️"
-                                 title={t('home.hospitalNavigation')} description={t('home.descNavigation')} />
+                        title={t('home.hospitalNavigation')} description={t('home.descNavigation')} />
 
                     <ServiceCard to="/asha" imgSrc="/images/custom/asha-calendar.jpg" icon="👩‍⚕️"
-                                 title={'ASHA Calendar'} description={'Local health camps & vaccination events'} />
+                        title={'ASHA Calendar'} description={'Local health camps & vaccination events'} />
                 </div>
             </div>
         </div>
@@ -179,6 +182,9 @@ export default function App() {
             <Route path="/doctor/video-call" element={<DoctorVideoCall />} />
             <Route path="/patient/video-call" element={<PatientVideoCall />} />
 
+            {/* Doctor Portal (New Module) */}
+            <Route path="/doctor/*" element={<DoctorLayout />} />
+
             {/* Main Layout Routes */}
             <Route element={<MainLayout />}>
                 <Route path="/home" element={<Home />} />
@@ -190,7 +196,6 @@ export default function App() {
                 <Route path="/emergency" element={<EmergencyMode />} />
                 <Route path="/navigation" element={<HospitalNavigation />} />
                 <Route path="/asha" element={<AshaCalendar />} />
-                <Route path="/doctor/dashboard" element={<ConsultationDashboard />} />
             </Route>
 
             <Route path="/" element={<Navigate to="/login" replace />} />

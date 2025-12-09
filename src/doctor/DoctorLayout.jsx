@@ -7,6 +7,8 @@ import EmergencyPatientsPage from './pages/DoctorEmergencyCallsPage'
 import AppointmentsPage from './pages/DoctorTodaysAppointmentsPage'
 import VideoRecordingsPage from './pages/DoctorVideoPage'
 import HealthRecordsPage from './pages/DoctorHealthRecordsPage'
+import DoctorVideoCall from './pages/DoctorVideoCall'
+import { CallReceiver } from '../context/CallInvitationHandler'
 
 export default function DoctorLayout() {
   const location = useLocation()
@@ -17,21 +19,24 @@ export default function DoctorLayout() {
   }, [location.pathname])
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <DoctorHeader />
-      <div className="flex">
-        {!isDashboard && <DoctorSidebar />}
-        <main className={`flex-1 ${isDashboard ? 'w-full' : ''} px-4 sm:px-6 lg:px-8 py-6`}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/doctor/dashboard" replace />} />
-            <Route path="dashboard" element={<DoctorDashboard />} />
-            <Route path="emergency-calls" element={<EmergencyPatientsPage />} />
-            <Route path="todays-appointments" element={<AppointmentsPage />} />
-            <Route path="video" element={<VideoRecordingsPage />} />
-            <Route path="health-records" element={<HealthRecordsPage />} />
-          </Routes>
-        </main>
+    <CallReceiver>
+      <div className="min-h-screen bg-zinc-50 text-zinc-900">
+        <DoctorHeader />
+        <div className="flex">
+          {!isDashboard && <DoctorSidebar />}
+          <main className={`flex-1 ${isDashboard ? 'w-full' : ''} px-4 sm:px-6 lg:px-8 py-6`}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/doctor/dashboard" replace />} />
+              <Route path="dashboard" element={<DoctorDashboard />} />
+              <Route path="emergency-calls" element={<EmergencyPatientsPage />} />
+              <Route path="todays-appointments" element={<AppointmentsPage />} />
+              <Route path="video" element={<VideoRecordingsPage />} />
+              <Route path="video-call" element={<DoctorVideoCall />} />
+              <Route path="health-records" element={<HealthRecordsPage />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </CallReceiver>
   )
 }

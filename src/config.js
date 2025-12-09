@@ -1,36 +1,20 @@
-// 💠 GEMINI API KEY
-export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+// Configuration for Gemini AI
+export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'your_gemini_api_key_here';
 
-
-// 💠 BACKEND API BASE URL
-// (Render backend: https://jansehat.onrender.com)
+// API Configuration - Use environment variable or default to empty for client-side API calls
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-
-// 💠 Detect development mode
+// Check if we're in development mode
 export const IS_DEVELOPMENT = import.meta.env.DEV;
 
-
-// 💠 Get backend API URL dynamically
+// Get the current host for dynamic API URL
 export const getApiBaseUrl = () => {
-
-    // 1️⃣ If Vercel env variable exists — always use it
-    if (import.meta.env.VITE_API_BASE_URL) {
-        return import.meta.env.VITE_API_BASE_URL;
-    }
-
-    // 2️⃣ In local development → always use localhost backend
-    if (IS_DEVELOPMENT) {
-        return "http://localhost:3001";
-    }
-
-    // 3️⃣ Fallback for browser (should not be used in production)
     if (typeof window !== 'undefined') {
+        // Client-side: use current host
         const protocol = window.location.protocol;
         const hostname = window.location.hostname;
-        return `${protocol}//${hostname}`;
+        const port = IS_DEVELOPMENT ? ':3001' : '';
+        return `${protocol}//${hostname}${port}`;
     }
-
-    // 4️⃣ Default fallback
     return API_BASE_URL;
 };
