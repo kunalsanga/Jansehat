@@ -1,0 +1,7 @@
+### Test Symptom Checker API
+POST https://jansehat.onrender.com/api/symptom-check
+Content-Type: application/json
+
+{
+  "symptoms": "fever, cough and headache"
+}
