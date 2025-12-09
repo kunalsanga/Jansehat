@@ -611,17 +611,7 @@ function MedicineAvailability() {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">{t('medicine.title')}</h1>
           <p className="text-xs sm:text-sm text-zinc-600">{t('medicine.subtitle')}</p>
         </div>
-        <button
-          onClick={() => setShowCart(!showCart)}
-          className="relative px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm sm:text-base"
-        >
-          🛒 {t('medicine.cart')} ({cart.length})
-          {cart.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              {cart.reduce((sum, item) => sum + item.quantity, 0)}
-            </span>
-          )}
-        </button>
+
       </div>
 
       {/* Search and Filters */}
@@ -695,74 +685,7 @@ function MedicineAvailability() {
         </div>
       )}
 
-      {/* Cart Sidebar */}
-      {showCart && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
-          <div className="w-full max-w-md bg-white h-full overflow-y-auto">
-            <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{t('medicine.shoppingCart')}</h2>
-              <button
-                onClick={() => setShowCart(false)}
-                className="text-zinc-500 hover:text-zinc-700"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="p-4 space-y-4">
-              {cart.length === 0 ? (
-                <p className="text-zinc-500 text-center py-8">{t('medicine.cartEmpty')}</p>
-              ) : (
-                <>
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 border border-zinc-200 rounded-lg">
-                      <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center">
-                        💊
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm truncate">{item.name}</h3>
-                        <p className="text-xs text-zinc-500">{item.brand}</p>
-                        <p className="text-sm font-semibold text-green-600">₹{item.price}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-sm"
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center text-sm">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-6 h-6 rounded-full bg-zinc-200 flex items-center justify-center text-sm"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700 text-sm"
-                      >
-                        {t('medicine.remove')}
-                      </button>
-                    </div>
-                  ))}
-
-                  <div className="border-t border-zinc-200 pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-semibold">{t('medicine.total')}</span>
-                      <span className="text-lg font-semibold text-green-600">₹{getTotalPrice()}</span>
-                    </div>
-                    <button className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-medium">
-                      {t('medicine.checkout')}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {!isLoading && (
         <div className="space-y-4 sm:space-y-5">
@@ -793,13 +716,7 @@ function MedicineAvailability() {
                     <div className="text-lg sm:text-xl font-semibold text-green-600">₹{m.price}</div>
                     <div className="text-xs text-zinc-500">{t('medicine.perUnit')}</div>
                   </div>
-                  <button
-                    onClick={() => addToCart(m)}
-                    disabled={m.stock === 'Out of Stock'}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:bg-zinc-300 disabled:cursor-not-allowed text-sm sm:text-base"
-                  >
-                    {m.stock === 'Out of Stock' ? t('medicine.outOfStock') : t('medicine.addToCart')}
-                  </button>
+
                 </div>
               </div>
 

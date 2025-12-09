@@ -94,11 +94,22 @@ export default function AshaCalendar() {
       } catch (err) { console.error(err) }
     }
 
-    // initialize from localStorage
+    // initialize from localStorage + Dummy Data
     try {
       const raw = localStorage.getItem('emergency_feed')
       const feed = raw ? JSON.parse(raw) : []
-      if (feed.length) setEmergencies(feed)
+      if (feed.length === 0) {
+        // Add dummy data for presentation
+        const dummy = [
+          { id: 'EMG-9021', ts: Date.now() - 100000, lat: 28.5, lng: 77.2, condition: 'Labor Pain' },
+          { id: 'EMG-9022', ts: Date.now() - 500000, lat: 28.6, lng: 77.3, condition: 'High Fever' },
+          { id: 'EMG-9023', ts: Date.now() - 1200000, lat: 28.7, lng: 77.1, condition: 'Accident' },
+          { id: 'EMG-9024', ts: Date.now() - 3600000, lat: 28.5, lng: 77.2, condition: 'Snake Bite' }
+        ];
+        setEmergencies(dummy);
+      } else {
+        setEmergencies(feed);
+      }
     } catch (err) { console.error(err) }
 
     window.addEventListener('storage', handleStorage)
@@ -128,69 +139,120 @@ export default function AshaCalendar() {
   }
 
   return (
-    <div className="p-4 sm:p-6">
-      {/* Emergency notifications panel for ASHA worker */}
-      {emergencies && emergencies.length > 0 && (
-        <div className="asha-notifications" aria-live="polite">
-          <div className="asha-notifications-header">Emergencies</div>
-          {emergencies.slice(0, 5).map((em, idx) => (
-            <div key={em.ts || idx} className="asha-notification-item">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-semibold">{em.id}</div>
-                  <div className="text-xxs text-zinc-600">{new Date(em.ts).toLocaleString()}</div>
-                </div>
-                <div className="text-right">
-                  <button className="btn-primary" onClick={() => openMapsFor(em.lat, em.lng)}>Track Location</button>
-                </div>
-              </div>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6 text-slate-800">ASHA Worker Dashboard</h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT COLUMN: Incoming Emergency Calls */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-red-500">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-red-600 flex items-center gap-2">
+                <span className="animate-pulse">🚨</span> Incoming Calls
+              </h2>
+              <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-bold">{emergencies.length} Active</span>
             </div>
-          ))}
-        </div>
-      )}
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-4 asha-card">
-        <div className="flex items-center justify-between mb-3">
-          <button className="btn-nav" onClick={prevMonth} aria-label="Previous month">◀</button>
-          <div className="text-center">
-            <div className="text-lg font-bold">{MONTHS[currentMonth]}</div>
-            <div className="text-sm text-zinc-600">{currentYear}</div>
-          </div>
-          <button className="btn-nav" onClick={nextMonth} aria-label="Next month">▶</button>
-        </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold mb-2">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-            <div key={d} className="py-1 text-zinc-700">{d}</div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-1">
-          {matrix.map((week, wi) => (
-            week.map((date, di) => {
-              const key = date ? formatKey(date) : `${wi}-${di}`
-              const dayEvents = date && events[formatKey(date)]
-              const isToday = date && formatKey(date) === formatKey(today)
-              const eventType = dayEvents ? dayEvents[0].type : null
-              const colorClass = eventType ? `date-${eventType}` : ''
-              return (
-                <button
-                  key={key}
-                  onClick={() => date && setSelectedDate(date)}
-                  className={`p-2 rounded-lg focus:outline-none h-14 flex flex-col items-center justify-center ${date ? 'bg-zinc-50' : 'bg-transparent'} ${isToday ? 'ring-2 ring-blue-400' : ''} ${colorClass}`}
-                  disabled={!date}
-                >
-                  <div className="text-base font-medium">{date ? date.getDate() : ''}</div>
-                  <div className="text-xxs mt-1">
-                    {dayEvents ? <span className={`event-dot ${eventType}`}></span> : null}
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+              {emergencies.length === 0 ? (
+                <div className="text-center py-8 text-zinc-500 italic">No active emergency calls</div>
+              ) : (
+                emergencies.map((em, idx) => (
+                  <div key={em.ts || idx} className="p-3 rounded-lg border border-red-100 bg-red-50 hover:bg-red-100 transition shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-bold text-slate-800 text-sm">Patient ID: {em.id.slice(-6).toUpperCase()}</span>
+                      <span className="text-xxs text-slate-500">{new Date(em.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="text-xs text-slate-600 mb-3">
+                      <p><strong>Condition:</strong> Critical / Pregnancy</p>
+                      <p><strong>Location:</strong> Village Sector 4</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-2 rounded font-semibold shadow-sm transition">
+                        📞 Call
+                      </button>
+                      <button
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 rounded font-semibold shadow-sm transition"
+                        onClick={() => openMapsFor(em.lat || 28.6139, em.lng || 77.2090)}
+                      >
+                        📍 Track
+                      </button>
+                    </div>
                   </div>
-                </button>
-              )
-            })
-          ))}
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+            <h3 className="font-bold text-blue-800 mb-2">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="bg-white p-2 rounded border border-blue-200 text-xs font-medium text-blue-700 hover:bg-blue-100">Register Pregnancy</button>
+              <button className="bg-white p-2 rounded border border-blue-200 text-xs font-medium text-blue-700 hover:bg-blue-100">Update Vitals</button>
+              <button className="bg-white p-2 rounded border border-blue-200 text-xs font-medium text-blue-700 hover:bg-blue-100">Schedule Visit</button>
+              <button className="bg-white p-2 rounded border border-blue-200 text-xs font-medium text-blue-700 hover:bg-blue-100">Req. Medicine</button>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-4 text-sm text-zinc-600">
-          <strong>Tip:</strong> Tap a date to see events. Large text and simple icons for easy reading.
+        {/* RIGHT COLUMN: Calendar */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-xl shadow-md p-4 asha-card h-full">
+            <div className="flex items-center justify-between mb-4 border-b pb-4">
+              <button className="btn-nav p-2 hover:bg-slate-100 rounded-full" onClick={prevMonth} aria-label="Previous month">◀</button>
+              <div className="text-center">
+                <div className="text-xl font-bold text-slate-800">{MONTHS[currentMonth]}</div>
+                <div className="text-sm text-zinc-500">{currentYear}</div>
+              </div>
+              <button className="btn-nav p-2 hover:bg-slate-100 rounded-full" onClick={nextMonth} aria-label="Next month">▶</button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold mb-2 text-slate-400 uppercase tracking-wider">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                <div key={d} className="py-2">{d}</div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-2">
+              {matrix.map((week, wi) => (
+                week.map((date, di) => {
+                  const key = date ? formatKey(date) : `${wi}-${di}`
+                  const dayEvents = date && events[formatKey(date)]
+                  const isToday = date && formatKey(date) === formatKey(today)
+                  const eventType = dayEvents ? dayEvents[0].type : null
+                  const colorClass = eventType ? `date-${eventType}` : ''
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => date && setSelectedDate(date)}
+                      className={`
+                        relative w-full aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200
+                        ${date ? 'bg-slate-50 hover:bg-white hover:shadow-md hover:scale-105 border border-transparent hover:border-slate-200' : 'invisible'} 
+                        ${isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''} 
+                        ${colorClass}
+                      `}
+                      disabled={!date}
+                    >
+                      <span className={`text-sm font-semibold ${isToday ? 'text-blue-600' : 'text-slate-700'}`}>{date ? date.getDate() : ''}</span>
+                      {dayEvents && (
+                        <div className="flex gap-1 mt-1">
+                          {dayEvents.map((_, i) => (
+                            <span key={i} className={`w-1.5 h-1.5 rounded-full ${eventType === 'vaccination' ? 'bg-purple-500' : eventType === 'polio' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  )
+                })
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-4 text-xs text-zinc-600 justify-center border-t pt-4">
+              <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-purple-500"></span> Vaccination</div>
+              <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-500"></span> Polio Drive</div>
+              <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500"></span> Camp/Visit</div>
+            </div>
+          </div>
         </div>
       </div>
 
