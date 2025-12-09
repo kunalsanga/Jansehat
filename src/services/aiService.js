@@ -11,20 +11,23 @@ class AIService {
         this.minRequestInterval = 3000; // 3 seconds between requests (increased for quota management)
         this.modelUsage = new Map(); // Track model usage for smart selection
         this.initializeAI();
-        // Use environment variable for Vercel/Production support (Ngrok tunnel)
-        this.localLLMUrl = import.meta.env.VITE_LOCAL_LLM_URL || 'http://localhost:11434/v1/chat/completions';
-        this.localModel = 'qwen2.5';
+        this.localLLMUrl = 'http://localhost:11434/v1/chat/completions'; // Default Ollama endpoint
+        this.localModel = 'qwen2.5:latest';
     }
 
     initializeAI() {
-        if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_here') {
+        // Check for presence of a key starting with AIzaSy (basic validation)
+        if (GEMINI_API_KEY && GEMINI_API_KEY.startsWith('AIzaSy')) {
             try {
-                this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+                this.genAI = new GoogleGenerativeAI(GEMNI_API_KEY);
                 this.isConfigured = true;
             } catch (error) {
                 console.error('Failed to initialize Gemini AI:', error);
                 this.isConfigured = false;
             }
+        } else {
+            // If the key is missing or is the placeholder, configuration fails
+            this.isConfigured = false;
         }
     }
 
@@ -72,9 +75,9 @@ class AIService {
     // Get best available model based on usage patterns
     getBestAvailableModel() {
         const models = [
-            { name: "gemini-2.0-flash-lite", priority: 1, maxRpm: 30 },
-            { name: "gemini-2.0-flash", priority: 2, maxRpm: 15 },
-            { name: "gemini-2.5-flash-lite", priority: 3, maxRpm: 15 }
+            { name: "gemini-2.5-flash-lite", priority: 1, maxRpm: 15 },
+            { name: "gemini-2.0-flash-lite", priority: 2, maxRpm: 30 },
+            { name: "gemini-2.0-flash", priority: 3, maxRpm: 15 },
         ];
 
         // Sort by priority (lower is better) and recent failures
@@ -152,13 +155,7 @@ This is general guidance only. Always consult with qualified healthcare professi
                 },
                 body: JSON.stringify({
                     model: this.localModel,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are JanSehat Assistant, a helpful and knowledgeable medical AI. Provide clear, professional, and empathetic health guidance. Use Markdown for formatting.'
-                        },
-                        ...messages
-                    ],
+                    messages: messages,
                     stream: isStreaming
                 }),
             });
@@ -217,75 +214,86 @@ This is general guidance only. Always consult with qualified healthcare professi
         }
     }
 
-    // UPDATED analyzeSymptoms() — Option 2 (Auto Local LLM + Gemini fallback)
+    // OLD: Gemini API Support (preserved for fallback/compatibility)
     async analyzeSymptoms(symptoms) {
         if (!symptoms || symptoms.trim().length < 2) {
             throw new Error('Please provide more detail (at least 2 characters)');
         }
 
-        // 1️⃣ AUTO-DETECT IF LOCAL LLM IS AVAILABLE
-        if (this.localLLMUrl && this.localLLMUrl.startsWith("https://")) {
-            try {
-                console.log("Using LOCAL LLM (Qwen 2.5) via Ngrok:", this.localLLMUrl);
-                return await this.analyzeSymptomsLocal(
-                    [{ role: "user", content: symptoms }]
-                );
-            } catch (localError) {
-                console.warn("Local LLM failed. Falling back to Gemini:", localError);
-            }
-        }
-
-        // 2️⃣ FALLBACK TO GEMINI BACKEND API
         const apiBase = getApiBaseUrl();
 
+        // Try backend (Ollama Qwen or Gemini fallback)
         try {
-            console.log("Using BACKEND API fallback:", apiBase);
             const res = await fetch(`${apiBase}/api/symptom-check`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ symptoms })
             });
-
             if (!res.ok) {
-                throw new Error(await res.text());
+                const msg = await res.text();
+                throw new Error(msg || 'Backend error');
             }
-
             const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Backend error');
             return {
                 success: true,
                 analysis: data.analysis,
                 timestamp: data.timestamp || new Date().toISOString(),
-                modelSource: 'backend'
+                modelSource: data.modelSource || 'backend'
             };
-        } catch (backendError) {
-            console.warn("Backend failed. Attempting DIRECT Gemini fallback:", backendError);
+        } catch (e) {
+            console.error('Backend symptom check failed, trying client Gemini if available:', e);
         }
 
-        // 3️⃣ CLIENT-SIDE GEMINI FALLBACK (LAST RESORT)
+        // Client-side Gemini fallback (if configured)
         if (!this.isConfigured) {
             throw new Error('AI service not configured. Please add a valid Gemini API key.');
         }
 
+        // Apply rate limiting
         await this.waitForRateLimit();
 
         const bestModel = this.getBestAvailableModel();
-        console.log(`Using Gemini Model: ${bestModel}`);
+        console.log(`Using model: ${bestModel}`);
 
         try {
             const model = this.genAI.getGenerativeModel({ model: bestModel });
             const prompt = `
-    You are JanSehat Assistant. Analyze the following symptoms:
+You are a helpful medical assistant providing preliminary health guidance. Analyze the following symptoms:
 
-    Symptoms: ${symptoms}
+Symptoms: ${symptoms}
 
-    Provide structured, medically safe guidance.
-            `;
+Please provide a structured analysis in the following format:
+
+**POSSIBLE CONDITIONS:**
+[List 2-3 most likely conditions based on symptoms]
+
+**URGENCY LEVEL:**
+[Low/Medium/High - based on symptom severity]
+
+**RECOMMENDED ACTIONS:**
+[Specific next steps the patient should take]
+
+**WHEN TO SEEK IMMEDIATE CARE:**
+[Warning signs that require urgent medical attention]
+
+**GENERAL ADVICE:**
+[General health recommendations]
+
+IMPORTANT DISCLAIMERS:
+- This is preliminary guidance only
+- Not a substitute for professional medical diagnosis
+- Always consult with qualified healthcare professionals
+- Seek immediate medical care for severe or worsening symptoms
+- This analysis is for educational purposes only
+
+Keep the response concise, clear, and professional. Focus on practical guidance while emphasizing the need for professional medical consultation.
+      `;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
             const text = response.text();
             this.trackModelUsage(bestModel, true);
-
             return {
                 success: true,
                 analysis: text,
@@ -293,12 +301,17 @@ This is general guidance only. Always consult with qualified healthcare professi
                 modelSource: 'gemini-client'
             };
         } catch (e) {
-            console.error("Gemini client failed:", e);
+            const msg = String(e?.message || e);
+            this.trackModelUsage(bestModel, false);
 
+            // If it's a quota error, return fallback response instead of throwing
             if (this.isQuotaError(e)) {
+                console.warn(`API quota exceeded for ${bestModel}, returning fallback response:`, msg);
                 return this.getFallbackResponse(symptoms);
             }
 
+            // For other errors, try fallback response
+            console.error(`Model ${bestModel} failed:`, msg);
             return this.getFallbackResponse(symptoms);
         }
     }
@@ -312,59 +325,59 @@ This is general guidance only. Always consult with qualified healthcare professi
             return { action: 'UNKNOWN', confidence: 0, reason: 'Empty transcript' };
         }
 
+        // Declare outside try/catch scope
+        let bestModel = 'unknown';
+
         try {
             // Apply rate limiting for voice commands too
             await this.waitForRateLimit();
 
-            const bestModel = this.getBestAvailableModel();
+            bestModel = this.getBestAvailableModel(); // Assigned inside try block
             console.log(`Using model for voice command: ${bestModel}`);
 
             const model = this.genAI.getGenerativeModel({ model: bestModel });
             const locale = options.locale || 'auto';
+            // Removed nowPathHints as it's unused in the prompt
 
             const prompt = `
-    You are an intent classification engine for a healthcare web app. Your task is to listen to the user and output a STRICT JSON object.
+You are an intent classification engine for a healthcare web app. Your task is to listen to the user and output a STRICT JSON object.
 
-    Rules:
-    1. Detect the user's language.
-    2. Interpret the intent and map it to one of these actions:
-       - OPEN_HOME, OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION
-       - CHAT (for greetings, questions, or unclear commands that behave like conversation)
-       - UNKNOWN (completely unintelligible)
-    3. Generate a natural, friendly "responseText" in the SAME language as the user.
-       - For navigation: Confirm the action (e.g., "Opening Symptom Checker").
-       - For CHAT: Reply naturally (e.g., "Hello! How can I help you?").
-       - For UNKNOWN: Politely ask to repeat.
-    4. Return ONLY JSON.
+Rules:
+1. Identify the user's **primary language** (e.g., English, Hindi, Punjabi).
+2. Interpret the intent and map it to one of these actions: OPEN_HOME, OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION, CHAT, UNKNOWN.
+3. Generate a natural, friendly "responseText" in the **SAME language** as the user.
+4. Return **ONLY** the JSON object. Do not include markdown fences (e.g., \`\`\`).
 
-    JSON schema:
-    {
-      "action": "String (one of the actions above)",
-      "confidence": Number, // 0-1
-      "parameters": { "medicine": string, "destination": string },
-      "detectedLanguage": "String (Language Name)",
-      "languageCode": "String (BCP 47 code e.g. en-US, hi-IN, pa-IN)",
-      "responseText": "String (The spoken response)"
-    }
+JSON schema:
+{
+  "action": "String (one of the actions above)",
+  "confidence": Number, // 0-1
+  "detectedLanguage": "String (Language Name, e.g., English, Hindi)",
+  "responseText": "String (The spoken response)"
+}
 
-    Context:
-    - User locale: ${locale}
-    - App Features: Health Records, Emergency SOS, Symptom Checker, Video Consult, Medicine Finder, Hospital Nav.
+Context: User locale: ${locale}. App Features: Health Records, Emergency SOS, Symptom Checker, Video Consult, Medicine Finder, Hospital Nav.
 
-    User said: "${transcript}"
-    `;
+User said: "${transcript}"
+`;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
-            const text = response.text();
+            let text = response.text().trim(); // Trim whitespace
+
+            // Debug log
+            console.log('AI Raw Response:', text);
 
             this.trackModelUsage(bestModel, true);
 
             let parsed;
             try {
-                parsed = JSON.parse(text);
+                // FIX: Aggressively remove markdown fences (```json, ```) for robust parsing
+                const cleanedText = text.replace(/```json|```/g, '').trim();
+                parsed = JSON.parse(cleanedText);
             } catch (e) {
-                // Try to salvage JSON if the model added code fences accidentally
+                console.error('JSON Parsing Failed:', e);
+                // Fallback to salvage JSON if badly formatted (finds first { to last })
                 const jsonMatch = text.match(/\{[\s\S]*\}/);
                 parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
             }
@@ -373,9 +386,15 @@ This is general guidance only. Always consult with qualified healthcare professi
                 return { action: 'UNKNOWN', confidence: 0, reason: 'Unparseable response', raw: text };
             }
 
+            // Simple validation check to ensure necessary fields exist
+            if (!parsed.detectedLanguage || !parsed.responseText || typeof parsed.confidence !== 'number') {
+                parsed.confidence = 0.5; // Default confidence if missing
+                parsed.reason = 'Missing required fields in parsed JSON';
+            }
+
             return parsed;
         } catch (error) {
-            console.error('Error interpreting voice command:', error);
+            console.error('API Call Failed:', error.message);
             this.trackModelUsage(bestModel, false);
             return { action: 'UNKNOWN', confidence: 0, reason: 'Model error' };
         }
@@ -385,4 +404,4 @@ This is general guidance only. Always consult with qualified healthcare professi
 // Create singleton instance
 const aiService = new AIService();
 
-export default aiService;
+export default aiService
