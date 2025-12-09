@@ -217,86 +217,75 @@ This is general guidance only. Always consult with qualified healthcare professi
         }
     }
 
-    // OLD: Gemini API Support (preserved for fallback/compatibility)
+    // UPDATED analyzeSymptoms() — Option 2 (Auto Local LLM + Gemini fallback)
     async analyzeSymptoms(symptoms) {
         if (!symptoms || symptoms.trim().length < 2) {
             throw new Error('Please provide more detail (at least 2 characters)');
         }
 
+        // 1️⃣ AUTO-DETECT IF LOCAL LLM IS AVAILABLE
+        if (this.localLLMUrl && this.localLLMUrl.startsWith("https://")) {
+            try {
+                console.log("Using LOCAL LLM (Qwen 2.5) via Ngrok:", this.localLLMUrl);
+                return await this.analyzeSymptomsLocal(
+                    [{ role: "user", content: symptoms }]
+                );
+            } catch (localError) {
+                console.warn("Local LLM failed. Falling back to Gemini:", localError);
+            }
+        }
+
+        // 2️⃣ FALLBACK TO GEMINI BACKEND API
         const apiBase = getApiBaseUrl();
 
-        // Try backend (Ollama Qwen or Gemini fallback)
         try {
+            console.log("Using BACKEND API fallback:", apiBase);
             const res = await fetch(`${apiBase}/api/symptom-check`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ symptoms })
             });
+
             if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || 'Backend error');
+                throw new Error(await res.text());
             }
+
             const data = await res.json();
-            if (!data.success) throw new Error(data.error || 'Backend error');
             return {
                 success: true,
                 analysis: data.analysis,
                 timestamp: data.timestamp || new Date().toISOString(),
-                modelSource: data.modelSource || 'backend'
+                modelSource: 'backend'
             };
-        } catch (e) {
-            console.error('Backend symptom check failed, trying client Gemini if available:', e);
+        } catch (backendError) {
+            console.warn("Backend failed. Attempting DIRECT Gemini fallback:", backendError);
         }
 
-        // Client-side Gemini fallback (if configured)
+        // 3️⃣ CLIENT-SIDE GEMINI FALLBACK (LAST RESORT)
         if (!this.isConfigured) {
             throw new Error('AI service not configured. Please add a valid Gemini API key.');
         }
 
-        // Apply rate limiting
         await this.waitForRateLimit();
 
         const bestModel = this.getBestAvailableModel();
-        console.log(`Using model: ${bestModel}`);
+        console.log(`Using Gemini Model: ${bestModel}`);
 
         try {
             const model = this.genAI.getGenerativeModel({ model: bestModel });
             const prompt = `
-You are a helpful medical assistant providing preliminary health guidance. Analyze the following symptoms:
+    You are JanSehat Assistant. Analyze the following symptoms:
 
-Symptoms: ${symptoms}
+    Symptoms: ${symptoms}
 
-Please provide a structured analysis in the following format:
-
-**POSSIBLE CONDITIONS:**
-[List 2-3 most likely conditions based on symptoms]
-
-**URGENCY LEVEL:**
-[Low/Medium/High - based on symptom severity]
-
-**RECOMMENDED ACTIONS:**
-[Specific next steps the patient should take]
-
-**WHEN TO SEEK IMMEDIATE CARE:**
-[Warning signs that require urgent medical attention]
-
-**GENERAL ADVICE:**
-[General health recommendations]
-
-IMPORTANT DISCLAIMERS:
-- This is preliminary guidance only
-- Not a substitute for professional medical diagnosis
-- Always consult with qualified healthcare professionals
-- Seek immediate medical care for severe or worsening symptoms
-- This analysis is for educational purposes only
-
-Keep the response concise, clear, and professional. Focus on practical guidance while emphasizing the need for professional medical consultation.
-      `;
+    Provide structured, medically safe guidance.
+            `;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
             const text = response.text();
             this.trackModelUsage(bestModel, true);
+
             return {
                 success: true,
                 analysis: text,
@@ -304,15 +293,12 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
                 modelSource: 'gemini-client'
             };
         } catch (e) {
-            const msg = String(e?.message || e);
-            this.trackModelUsage(bestModel, false);
+            console.error("Gemini client failed:", e);
 
             if (this.isQuotaError(e)) {
-                console.warn(`API quota exceeded for ${bestModel}, returning fallback response:`, msg);
                 return this.getFallbackResponse(symptoms);
             }
 
-            console.error(`Model ${bestModel} failed:`, msg);
             return this.getFallbackResponse(symptoms);
         }
     }
@@ -335,39 +321,38 @@ Keep the response concise, clear, and professional. Focus on practical guidance 
 
             const model = this.genAI.getGenerativeModel({ model: bestModel });
             const locale = options.locale || 'auto';
-            const nowPathHints = ['/records', '/symptoms', '/video', '/emergency', '/medicine', '/navigation'];
 
             const prompt = `
-You are an intent classification engine for a healthcare web app. Your task is to listen to the user and output a STRICT JSON object.
+    You are an intent classification engine for a healthcare web app. Your task is to listen to the user and output a STRICT JSON object.
 
-Rules:
-1. Detect the user's language.
-2. Interpret the intent and map it to one of these actions:
-   - OPEN_HOME, OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION
-   - CHAT (for greetings, questions, or unclear commands that behave like conversation)
-   - UNKNOWN (completely unintelligible)
-3. Generate a natural, friendly "responseText" in the SAME language as the user.
-   - For navigation: Confirm the action (e.g., "Opening Symptom Checker").
-   - For CHAT: Reply naturally (e.g., "Hello! How can I help you?").
-   - For UNKNOWN: Politely ask to repeat.
-4. Return ONLY JSON.
+    Rules:
+    1. Detect the user's language.
+    2. Interpret the intent and map it to one of these actions:
+       - OPEN_HOME, OPEN_HEALTH_RECORDS, OPEN_EMERGENCY, OPEN_SYMPTOM_CHECKER, OPEN_VIDEO_CONSULTATION, OPEN_MEDICINE, OPEN_NAVIGATION
+       - CHAT (for greetings, questions, or unclear commands that behave like conversation)
+       - UNKNOWN (completely unintelligible)
+    3. Generate a natural, friendly "responseText" in the SAME language as the user.
+       - For navigation: Confirm the action (e.g., "Opening Symptom Checker").
+       - For CHAT: Reply naturally (e.g., "Hello! How can I help you?").
+       - For UNKNOWN: Politely ask to repeat.
+    4. Return ONLY JSON.
 
-JSON schema:
-{
-  "action": "String (one of the actions above)",
-  "confidence": Number, // 0-1
-  "parameters": { "medicine": string, "destination": string },
-  "detectedLanguage": "String (Language Name)",
-  "languageCode": "String (BCP 47 code e.g. en-US, hi-IN, pa-IN)",
-  "responseText": "String (The spoken response)"
-}
+    JSON schema:
+    {
+      "action": "String (one of the actions above)",
+      "confidence": Number, // 0-1
+      "parameters": { "medicine": string, "destination": string },
+      "detectedLanguage": "String (Language Name)",
+      "languageCode": "String (BCP 47 code e.g. en-US, hi-IN, pa-IN)",
+      "responseText": "String (The spoken response)"
+    }
 
-Context:
-- User locale: ${locale}
-- App Features: Health Records, Emergency SOS, Symptom Checker, Video Consult, Medicine Finder, Hospital Nav.
+    Context:
+    - User locale: ${locale}
+    - App Features: Health Records, Emergency SOS, Symptom Checker, Video Consult, Medicine Finder, Hospital Nav.
 
-User said: "${transcript}"
-`;
+    User said: "${transcript}"
+    `;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
