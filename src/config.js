@@ -9,6 +9,9 @@ export const IS_DEVELOPMENT = import.meta.env.DEV;
 
 // Get the current host for dynamic API URL
 export const getApiBaseUrl = () => {
+    if (import.meta.env.VITE_API_BASE_URL) {
+        return import.meta.env.VITE_API_BASE_URL;
+    }
     if (typeof window !== 'undefined') {
         // Client-side: use current host
         const protocol = window.location.protocol;
