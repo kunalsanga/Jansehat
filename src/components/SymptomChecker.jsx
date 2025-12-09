@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom' // KEEP: useNavigate for
 import { FaMicrophone, FaStop, FaPaperPlane, FaUser, FaStethoscope } from 'react-icons/fa' // MERGED Icons
 import ReactMarkdown from 'react-markdown' // KEEP: ReactMarkdown from main
 import remarkGfm from 'remark-gfm' // KEEP: remarkGfm from main
+import rehypeRaw from 'rehype-raw' // NEW: For rendering HTML
 import aiService from '../services/aiService.js'
 
 // Helper component for rendering AI results (from i18n-integration)
@@ -14,6 +15,7 @@ function AIAnalysisResult({ analysis, timestamp, modelSource }) {
         <div className="prose prose-zinc max-w-none text-[15px] leading-7">
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                     ul: ({ node, ...props }) => <ul className="list-disc pl-4 space-y-1 my-2" {...props} />,
                     ol: ({ node, ...props }) => <ol className="list-decimal pl-4 space-y-1 my-2" {...props} />,

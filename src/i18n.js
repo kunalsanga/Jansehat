@@ -40,6 +40,7 @@ const resources = {
         assistant: 'JanSehat Assistant',
         voiceStop: 'Stop Listening',
         voiceStart: 'Start Voice Input',
+        welcome: 'Hello! How can I assist you with your health today?',
         placeholder: 'Describe your symptoms...',
         disclaimer: 'This is an AI assistant. Medical advice should be sought from a professional.',
         severityHigh: 'High Severity',
