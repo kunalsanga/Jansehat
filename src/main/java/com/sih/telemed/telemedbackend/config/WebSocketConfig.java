@@ -22,4 +22,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // messages sent to /app/** will be routed to @MessageMapping
         registry.setApplicationDestinationPrefixes("/app");
     }
+
 }

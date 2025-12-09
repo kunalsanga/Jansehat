@@ -4,10 +4,17 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+
+  // 👇 FIX for SockJS / STOMP "global is not defined"
+  define: {
+    global: "window",
+  },
+
   server: {
     host: '0.0.0.0',
     port: 5173,
   },
+
   preview: {
     host: '0.0.0.0',
     port: 4173,
