@@ -1,4 +1,4 @@
-<img width="1899" height="913" alt="Screenshot 2026-01-25 160630" src="https://github.com/user-attachments/assets/51e8f385-fbdc-4061-8518-6a8ae660d977" /># Jansehat - AI-Powered Unified Healthcare Ecosystem
+# Jansehat - AI-Powered Unified Healthcare Ecosystem
 (Deployed Link: https://jansehat.vercel.app/login)
 (Youtube Link: https://youtu.be/zJiAplzOQNU?si=kurrvDkNa_AiWwmM)
 
