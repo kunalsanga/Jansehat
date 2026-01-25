@@ -4,7 +4,7 @@
 
 Jansehat is a next-generation telemedicine platform designed to bridge the gap between patients, healthcare providers, and pharmacists. Built with **React 19** and **Google Gemini AI**, it provides an intelligent, accessible, and seamless healthcare experience.
 
-![Jansehat Banner](<img width="1907" height="908" alt="Image" src="https://github.com/user-attachments/assets/c9d39208-476d-4a63-800f-d4e97ae99e1e" />)
+![Jansehat Banner](img width="1907" height="908" alt="Image" src="https://github.com/user-attachments/assets/c9d39208-476d-4a63-800f-d4e97ae99e1e" /)
 
 ## 🌟 Overview
 
