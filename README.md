@@ -4,9 +4,13 @@
 
 Jansehat is a next-generation telemedicine platform designed to bridge the gap between patients, healthcare providers, and pharmacists. Built with **React 19** and **Google Gemini AI**, it provides an intelligent, accessible, and seamless healthcare experience.
 
-![Jansehat Banner](img width="1907" height="908" alt="Image" src="https://github.com/user-attachments/assets/c9d39208-476d-4a63-800f-d4e97ae99e1e" /)
-<img width="1907" height="908" alt="Screenshot 2026-01-25 160428" src="https://github.com/user-attachments/assets/bf8c034d-3166-4edd-9b9c-e0f640a433d8" />
 
+<img width="1907" height="908" alt="Screenshot 2026-01-25 160428" src="https://github.com/user-attachments/assets/bf8c034d-3166-4edd-9b9c-e0f640a433d8" />
+<img width="1902" height="906" alt="Screenshot 2026-01-25 160514" src="https://github.com/user-attachments/assets/a69a9e4b-d0d4-4d4e-8391-264c39b18be7" />
+<img width="1896" height="915" alt="Screenshot 2026-01-25 160544" src="https://github.com/user-attachments/assets/d76aef73-be29-4a69-be63-5a1924e2367e" />
+<img width="1888" height="912" alt="Screenshot 2026-01-25 160556" src="https://github.com/user-attachments/assets/625e2efa-08b3-4b07-87bd-f1fde4de3439" />
+<img width="1898" height="910" alt="Screenshot 2026-01-25 160607" src="https://github.com/user-attachments/assets/3aa80cb9-ada9-43f2-9366-7abf7cd83a7b" />
+<img width="1903" height="918" alt="Screenshot 2026-01-25 160619" src="https://github.com/user-attachments/assets/9bd907d1-79ee-483e-a6b7-a73a67c50012" />
 
 ## 🌟 Overview
 
