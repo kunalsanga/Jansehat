@@ -1,6 +1,6 @@
 # Jansehat - AI-Powered Unified Healthcare Ecosystem
-(Deployed Link: https://jansehat.vercel.app/login)
-(Youtube Link: https://youtu.be/zJiAplzOQNU?si=kurrvDkNa_AiWwmM)
+##(Deployed Link: https://jansehat.vercel.app/login)
+##(Youtube Link: https://youtu.be/zJiAplzOQNU?si=kurrvDkNa_AiWwmM)
 
 Jansehat is a next-generation telemedicine platform designed to bridge the gap between patients, healthcare providers, and pharmacists. Built with **React 19** and **Google Gemini AI**, it provides an intelligent, accessible, and seamless healthcare experience.
 
